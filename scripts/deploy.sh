@@ -70,7 +70,7 @@ fi
 # Set defaults
 WORKER_NAME="${WORKER_NAME:-autorag-worker}"
 PAGES_PROJECT="${PAGES_PROJECT:-autorag-widget}"
-R2_BUCKET="${R2_BUCKET:-autorag-docs}"
+R2_BUCKET="${R2_BUCKET_NAME:-autorag-docs}"
 AUTORAG_INSTANCE="${AUTORAG_INSTANCE_ID:-autorag-instance}"
 
 print_success "Configuration loaded"
