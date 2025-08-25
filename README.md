@@ -20,14 +20,14 @@ A production-ready, deployment-agnostic RAG (Retrieval-Augmented Generation) cha
 - Cloudflare account (free tier works)
 - Node.js 18+ and npm
 - Git
-- Cloudflare API Token - See [API_TOKEN_SETUP.md](API_TOKEN_SETUP.md) for setup
+- Cloudflare API Token - See [API_TOKEN_SETUP.md](docs/API_TOKEN_SETUP.md) for setup
 
 ### Deploy in 3 Steps
 
 ```bash
 # 1. Clone the repository
-git clone [your-repository-url]
-cd auto-rag-clean
+git clone https://github.com/arnemoor/rag-chatbot.git
+cd rag-chatbot
 
 # 2. Configure your Cloudflare credentials
 cp examples/.env.basic .env
@@ -92,7 +92,7 @@ Your Cloudflare Account
 ## 📁 Project Structure
 
 ```
-auto-rag-clean/
+rag-chatbot/
 ├── worker/              # Backend API (Cloudflare Worker)
 ├── widget/              # Embeddable widget (Cloudflare Pages)  
 ├── scripts/             # Deployment and utility scripts
