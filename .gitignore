@@ -26,8 +26,13 @@ configuration-summary.txt
 widget/src/config.js
 frontend/config.js
 
+# Generated config files
+worker/wrangler.toml
+widget/wrangler.toml
+
 # Keep templates
 !*.template
+!wrangler.toml.template
 !.env.example
 
 # Logs
