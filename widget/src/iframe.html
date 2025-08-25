@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoRAG Chat Interface</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f8fafc;
+      }
+
+      #widget-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+
+      /* Override widget styles for iframe mode */
+      autorag-widget {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="widget-container"></div>
+    <script src="autorag-widget.min.js"></script>
+    <script>
+      // Parse URL parameters for configuration
+      const params = new URLSearchParams(window.location.search);
+
+      // Create widget element
+      const widget = document.createElement('autorag-widget');
+
+      // Apply parameters as attributes
+      params.forEach((value, key) => {
+        // Decode system prompt if present
+        if (key === 'systemPrompt') {
+          value = decodeURIComponent(value);
+        }
+        widget.setAttribute(key, value);
+      });
+
+      // Force expanded mode for iframe
+      widget.setAttribute('mode', 'expanded');
+      widget.setAttribute('minimized', 'false');
+
+      // Mount widget
+      document.getElementById('widget-container').appendChild(widget);
+
+      // Ensure widget expands after initialization
+      setTimeout(() => {
+        if (widget.expand && typeof widget.expand === 'function') {
+          widget.expand();
+        }
+        // Also try shadow DOM method
+        if (widget.shadowRoot) {
+          const expandButton = widget.shadowRoot.querySelector('.widget-button');
+          if (expandButton) {
+            expandButton.click();
+          }
+        }
+      }, 100);
+    </script>
+  </body>
+</html>

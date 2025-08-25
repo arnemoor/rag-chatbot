@@ -1,0 +1,45 @@
+name = "{{WORKER_NAME}}"
+main = "src/index.ts"
+compatibility_date = "2024-01-15"
+account_id = "{{CLOUDFLARE_ACCOUNT_ID}}"
+
+# Default vars (used when no --env is specified)
+[vars]
+AUTORAG_INSTANCE = "{{AUTORAG_INSTANCE_ID}}"
+GATEWAY_NAME = "{{AI_GATEWAY_NAME}}"
+ENVIRONMENT = "development"
+# Optional: Enable debug mode for health endpoint (shows configuration status)
+DEBUG_MODE = "true"
+
+# ⚠️ SECURITY WARNING: Configure ALLOWED_ORIGINS for production!
+# The wildcard default (*) is only for development/testing
+# Uncomment and set your production domains:
+# ALLOWED_ORIGINS = "https://yourdomain.com,https://app.yourdomain.com"
+
+# Production environment  
+[env.production.vars]
+AUTORAG_INSTANCE = "{{AUTORAG_INSTANCE_ID}}"
+GATEWAY_NAME = "{{AI_GATEWAY_NAME}}"
+ENVIRONMENT = "production"
+# Disable debug mode in production
+DEBUG_MODE = "false"
+# Optional: Restrict CORS to specific origins in production
+# ALLOWED_ORIGINS = "https://yourdomain.com,https://app.yourdomain.com"
+
+# R2 bucket binding
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "{{R2_BUCKET_NAME}}"
+
+# AI binding for AutoRAG
+[ai]
+binding = "AI"
+
+# KV namespace for session storage (optional)
+# [[kv_namespaces]]
+# binding = "SESSIONS"
+# id = "your-kv-namespace-id"
+
+# Secrets to be added via CLI:
+# wrangler secret put OPENAI_API_KEY
+# wrangler secret put ANTHROPIC_API_KEY

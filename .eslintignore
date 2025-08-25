@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+worker/node_modules/
+widget/node_modules/
+
+# Production builds
+dist/
+build/
+*.min.js
+*.bundle.js
+widget/dist/
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Configuration templates
+*.template
+*.template.*
+
+# Documentation
+*.md
+
+# Sample data
+sample-documents/
+
+# Frontend demo files (legacy)
+frontend/
+
+# Generated files
+*.generated.js
+*.generated.ts

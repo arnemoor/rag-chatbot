@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoRAG Widget - Modular Usage Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f4f8;
+            padding: 40px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+        
+        .demo-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #2563eb;
+            margin-bottom: 20px;
+        }
+        
+        .control-panel {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #1d4ed8;
+        }
+        
+        .info {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+        
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+        
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AutoRAG Widget - Modular Usage Example</h1>
+        
+        <div class="demo-section">
+            <h2>Standard Widget Usage</h2>
+            <p>The widget works as before - as a complete web component:</p>
+            <div class="control-panel">
+                <button onclick="toggleWidget()">Toggle Widget Visibility</button>
+                <button onclick="changeTheme()">Toggle Theme</button>
+                <button onclick="changeLanguage()">Cycle Language</button>
+            </div>
+            <div id="widget-status" class="status"></div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Programmatic Control</h2>
+            <p>You can control the widget programmatically:</p>
+            <div class="control-panel">
+                <button onclick="openWidget()">Open Chat</button>
+                <button onclick="closeWidget()">Close Chat</button>
+                <button onclick="clearMessages()">Clear Messages</button>
+                <button onclick="getState()">Get Current State</button>
+            </div>
+            <pre id="state-output"></pre>
+        </div>
+
+        <div class="demo-section">
+            <h2>Event Monitoring</h2>
+            <p>Monitor widget events in real-time:</p>
+            <div id="event-log" style="background: #f8fafc; padding: 15px; border-radius: 8px; min-height: 100px; font-family: monospace; font-size: 12px;">
+                <em>Widget events will appear here...</em>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Module Architecture Benefits</h2>
+            <div class="info">
+                <strong>The new modular architecture provides:</strong>
+                <ul>
+                    <li>Better separation of concerns</li>
+                    <li>Easier testing of individual components</li>
+                    <li>Improved maintainability</li>
+                    <li>Extensibility for future features</li>
+                    <li>Cleaner code organization</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>Code Example</h2>
+            <p>Here's how the modular structure works internally:</p>
+            <pre>// The main widget now uses separate modules:
+
+import { WidgetStyles } from './styles/widget-styles.js';
+import { ThemeManager } from './utils/theme-manager.js';
+import { LanguageDetector } from './utils/language-detector.js';
+import { StateManager } from './services/state-manager.js';
+import { ApiService } from './services/api-service.js';
+import { ChatMessage } from './components/chat-message.js';
+import { ChatInput } from './components/chat-input.js';
+
+// Each module handles its specific responsibility:
+// - WidgetStyles: Generates CSS based on configuration
+// - ThemeManager: Handles theme switching
+// - LanguageDetector: Manages internationalization
+// - StateManager: Maintains widget state
+// - ApiService: Handles API communication
+// - ChatMessage: Renders individual messages
+// - ChatInput: Manages the input field</pre>
+        </div>
+    </div>
+
+    <!-- Include the widget -->
+    <script src="autorag-widget.min.js"></script>
+    
+    <!-- Widget configuration and control -->
+    <script>
+        // Configure widget before it loads
+        window.AutoRAGConfig = {
+            language: 'en',
+            theme: 'light',
+            position: 'bottom-right',
+            buttonText: 'Need Help?',
+            headerTitle: 'Support Chat',
+            autoInit: true
+        };
+
+        // Wait for widget to be ready
+        let widget;
+        let currentLang = 0;
+        const languages = ['en', 'de', 'fr', 'it'];
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            widget = document.querySelector('autorag-widget');
+            
+            if (!widget) {
+                widget = document.createElement('autorag-widget');
+                document.body.appendChild(widget);
+            }
+            
+            // Set up event listeners
+            widget.addEventListener('widget-opened', (e) => {
+                logEvent('Widget Opened', e.detail);
+                updateStatus('Widget is now open', 'success');
+            });
+            
+            widget.addEventListener('widget-closed', (e) => {
+                logEvent('Widget Closed', e.detail);
+                updateStatus('Widget is now closed', 'success');
+            });
+            
+            widget.addEventListener('message-sent', (e) => {
+                logEvent('Message Sent', {
+                    message: e.detail.message,
+                    sessionId: e.detail.sessionId
+                });
+            });
+            
+            widget.addEventListener('widget-error', (e) => {
+                logEvent('Widget Error', e.detail);
+                updateStatus('Error: ' + e.detail.error, 'error');
+            });
+        });
+
+        function toggleWidget() {
+            if (widget) {
+                const isVisible = widget.style.display !== 'none';
+                widget.style.display = isVisible ? 'none' : 'block';
+                updateStatus(`Widget ${isVisible ? 'hidden' : 'shown'}`, 'success');
+            }
+        }
+
+        function changeTheme() {
+            if (widget) {
+                const currentTheme = widget.getAttribute('theme') || 'light';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                widget.setAttribute('theme', newTheme);
+                updateStatus(`Theme changed to ${newTheme}`, 'success');
+            }
+        }
+
+        function changeLanguage() {
+            if (widget) {
+                currentLang = (currentLang + 1) % languages.length;
+                widget.setAttribute('language', languages[currentLang]);
+                updateStatus(`Language changed to ${languages[currentLang]}`, 'success');
+            }
+        }
+
+        function openWidget() {
+            if (widget && widget.expand) {
+                widget.expand();
+            } else {
+                // Trigger click on button as fallback
+                const button = widget?.shadowRoot?.querySelector('.widget-button');
+                if (button) button.click();
+            }
+        }
+
+        function closeWidget() {
+            if (widget && widget.minimize) {
+                widget.minimize();
+            } else {
+                // Trigger click on close button as fallback
+                const closeBtn = widget?.shadowRoot?.querySelector('.widget-close');
+                if (closeBtn) closeBtn.click();
+            }
+        }
+
+        function clearMessages() {
+            if (widget && widget.stateManager) {
+                widget.stateManager.clearMessages();
+                updateStatus('Messages cleared', 'success');
+            } else {
+                updateStatus('Cannot clear messages - widget not ready', 'error');
+            }
+        }
+
+        function getState() {
+            if (widget && widget.stateManager) {
+                const state = widget.stateManager.getState();
+                document.getElementById('state-output').textContent = JSON.stringify(state, null, 2);
+            } else {
+                document.getElementById('state-output').textContent = 'Widget state not available';
+            }
+        }
+
+        function updateStatus(message, type = 'success') {
+            const statusEl = document.getElementById('widget-status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            setTimeout(() => {
+                statusEl.textContent = '';
+                statusEl.className = 'status';
+            }, 3000);
+        }
+
+        function logEvent(eventName, data) {
+            const logEl = document.getElementById('event-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${eventName}: ${JSON.stringify(data)}\n`;
+            
+            if (logEl.textContent.includes('will appear here')) {
+                logEl.textContent = entry;
+            } else {
+                logEl.textContent = entry + logEl.textContent;
+            }
+            
+            // Keep only last 10 events
+            const lines = logEl.textContent.split('\n');
+            if (lines.length > 10) {
+                logEl.textContent = lines.slice(0, 10).join('\n');
+            }
+        }
+    </script>
+</body>
+</html>

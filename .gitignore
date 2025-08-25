@@ -1,0 +1,46 @@
+# Environment and secrets
+.env
+.env.local
+
+# Dependencies
+node_modules/
+worker/node_modules/
+widget/node_modules/
+frontend/node_modules/
+
+# Build outputs
+.wrangler/
+worker/.wrangler/
+worker/dist/
+widget/dist/
+
+# Test coverage
+coverage/
+*/coverage/
+*.lcov
+
+# Deployment-specific files (generated during deployment)
+deployment-config.json
+deployment-urls.txt
+configuration-summary.txt
+widget/src/config.js
+frontend/config.js
+
+# Keep templates
+!*.template
+!.env.example
+
+# Logs
+*.log
+deploy.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoRAG Widget Demo - Button Text Test</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #1e293b;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .control-panel {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 30px;
+      }
+
+      .control-group {
+        margin-bottom: 20px;
+      }
+
+      .control-group label {
+        display: block;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 8px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .control-group input,
+      .control-group select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+      }
+
+      .control-group input:focus,
+      .control-group select:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex: 1;
+      }
+
+      .btn-primary {
+        background: #2563eb;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+      }
+
+      .btn-secondary {
+        background: #ef4444;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #dc2626;
+        transform: translateY(-1px);
+      }
+
+      .info-box {
+        background: #fef3c7;
+        border: 2px solid #fbbf24;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+      }
+
+      .info-box p {
+        color: #92400e;
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      .preview-area {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 24px;
+        min-height: 200px;
+        position: relative;
+      }
+
+      .preview-title {
+        font-size: 12px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 16px;
+        font-weight: 600;
+      }
+
+      .code-display {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        overflow-x: auto;
+        margin-top: 30px;
+      }
+
+      .code-display .comment {
+        color: #64748b;
+      }
+
+      .code-display .tag {
+        color: #ef4444;
+      }
+
+      .code-display .attr {
+        color: #10b981;
+      }
+
+      .code-display .value {
+        color: #fbbf24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎯 AutoRAG Widget Demo</h1>
+
+      <div class="info-box">
+        <p>
+          <strong>Note:</strong>
+          This demo shows the widget in minimized (button) mode. Configure the button text and other parameters below,
+          then click "Apply Changes" to see the widget update. The widget appears in the bottom-right corner by default.
+        </p>
+      </div>
+
+      <div class="control-panel">
+        <h2 style="margin-bottom: 20px; color: #1e293b">Widget Configuration</h2>
+
+        <div class="control-group">
+          <label for="button-text">Button Text</label>
+          <input type="text" id="button-text" value="Chat with AI" placeholder="Enter button text" />
+        </div>
+
+        <div class="control-group">
+          <label for="header-title">Header Title</label>
+          <input type="text" id="header-title" value="AI Assistant" placeholder="Enter header title" />
+        </div>
+
+        <div class="control-group">
+          <label for="language">Language</label>
+          <select id="language">
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+            <option value="it">Italiano</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="category">Category</label>
+          <select id="category">
+            <option value="fiction">Fiction</option>
+            <option value="non-fiction">Non-Fiction</option>
+            <option value="reference">Reference</option>
+            <option value="science">Science</option>
+            <option value="technology">Technology</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="theme">Theme</label>
+          <select id="theme">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="position">Position</label>
+          <select id="position">
+            <option value="bottom-right">Bottom Right</option>
+            <option value="bottom-left">Bottom Left</option>
+            <option value="top-right">Top Right</option>
+            <option value="top-left">Top Left</option>
+          </select>
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-primary" onclick="applyChanges()">Apply Changes</button>
+          <button class="btn btn-secondary" onclick="resetWidget()">Reset Widget</button>
+        </div>
+      </div>
+
+      <div class="code-display" id="embed-code">
+        <!-- Will be populated dynamically -->
+      </div>
+    </div>
+
+    <!-- Widget will be added here dynamically -->
+    <div id="widget-container"></div>
+
+    <script src="autorag-widget.min.js"></script>
+    <script>
+      let currentWidget = null;
+
+      function createWidget() {
+        // Remove existing widget if any
+        if (currentWidget) {
+          currentWidget.remove();
+        }
+
+        // Create new widget
+        currentWidget = document.createElement('autorag-widget');
+
+        // Apply all configurations
+        const buttonText = document.getElementById('button-text').value;
+        const headerTitle = document.getElementById('header-title').value;
+        const language = document.getElementById('language').value;
+        const category = document.getElementById('category').value;
+        const theme = document.getElementById('theme').value;
+        const position = document.getElementById('position').value;
+
+        currentWidget.setAttribute('button-text', buttonText);
+        currentWidget.setAttribute('header-title', headerTitle);
+        currentWidget.setAttribute('language', language);
+        currentWidget.setAttribute('category', category);
+        currentWidget.setAttribute('theme', theme);
+        currentWidget.setAttribute('position', position);
+
+        // Add to page
+        document.getElementById('widget-container').appendChild(currentWidget);
+
+        // Update embed code
+        updateEmbedCode();
+      }
+
+      function updateEmbedCode() {
+        const buttonText = document.getElementById('button-text').value;
+        const headerTitle = document.getElementById('header-title').value;
+        const language = document.getElementById('language').value;
+        const category = document.getElementById('category').value;
+        const theme = document.getElementById('theme').value;
+        const position = document.getElementById('position').value;
+
+        const code = `<span class="comment"><!-- AutoRAG Widget --></span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="value">"./autorag-widget.min.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+<span class="tag">&lt;autorag-widget</span>
+  <span class="attr">button-text</span>=<span class="value">"${buttonText}"</span>
+  <span class="attr">header-title</span>=<span class="value">"${headerTitle}"</span>
+  <span class="attr">language</span>=<span class="value">"${language}"</span>
+  <span class="attr">category</span>=<span class="value">"${category}"</span>
+  <span class="attr">theme</span>=<span class="value">"${theme}"</span>
+  <span class="attr">position</span>=<span class="value">"${position}"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;/autorag-widget&gt;</span>`;
+
+        document.getElementById('embed-code').innerHTML = code;
+      }
+
+      function applyChanges() {
+        createWidget();
+      }
+
+      function resetWidget() {
+        document.getElementById('button-text').value = 'Chat with AI';
+        document.getElementById('header-title').value = 'AI Assistant';
+        document.getElementById('language').value = 'en';
+        document.getElementById('category').value = 'fiction';
+        document.getElementById('theme').value = 'light';
+        document.getElementById('position').value = 'bottom-right';
+        createWidget();
+      }
+
+      // Initialize widget on load
+      window.addEventListener('DOMContentLoaded', () => {
+        createWidget();
+      });
+    </script>
+  </body>
+</html>

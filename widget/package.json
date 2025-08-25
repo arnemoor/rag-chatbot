@@ -1,0 +1,46 @@
+{
+  "name": "autorag-widget",
+  "version": "1.0.0",
+  "description": "Embeddable chat widget for AutoRAG support chatbot",
+  "main": "dist/autorag-widget.min.js",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js --watch",
+    "serve": "npx serve demo -p 3000",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name=autorag-widget",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "format": "prettier --write \"**/*.{js,json,css,html}\"",
+    "format:check": "prettier --check \"**/*.{js,json,css,html}\"",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run --coverage --reporter=json --outputFile=test-results.json"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "esbuild": "^0.19.0",
+    "happy-dom": "^18.0.1",
+    "jsdom": "^26.1.0",
+    "serve": "^14.2.0",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.32.0"
+  },
+  "keywords": [
+    "chat",
+    "widget",
+    "webcomponent",
+    "autorag",
+    "cloudflare"
+  ],
+  "author": "AutoRAG Contributors",
+  "license": "MIT",
+  "dependencies": {
+    "dompurify": "^3.2.6"
+  }
+}
