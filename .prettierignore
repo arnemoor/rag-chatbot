@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+worker/node_modules/
+widget/node_modules/
+
+# Production builds
+dist/
+build/
+*.min.js
+*.bundle.js
+widget/dist/
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Environment and config
+.env
+.env.*
+wrangler.toml
+deployment-config.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+
+# Package files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Sample data
+sample-documents/
+
+# Frontend demo files (legacy)
+frontend/

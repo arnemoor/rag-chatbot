@@ -1,0 +1,1076 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoRAG Playground - Interactive Configuration</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .header {
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+
+      .header h1 {
+        font-size: 28px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .control-group label {
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .control-group select,
+      .control-group input {
+        padding: 10px 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        color: #1e293b;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .control-group select:hover,
+      .control-group input:hover {
+        border-color: #cbd5e1;
+      }
+
+      .control-group select:focus,
+      .control-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-secondary {
+        background: #ef4444;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+      }
+
+      .btn-tertiary {
+        background: #10b981;
+        color: white;
+      }
+
+      .btn-tertiary:hover {
+        background: #059669;
+        transform: translateY(-2px);
+      }
+
+      .main-content {
+        padding: 30px 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .playground-section {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .section-header h2 {
+        color: #1e293b;
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .section-header h2::before {
+        content: '';
+        width: 4px;
+        height: 28px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+      }
+
+      .chat-container {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 20px;
+        height: 600px;
+      }
+
+      .iframe-wrapper {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+        position: relative;
+      }
+
+      .iframe-wrapper iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .prompt-editor {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        background: white;
+        overflow: hidden;
+      }
+
+      .prompt-header {
+        background: #f8fafc;
+        padding: 16px;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      .prompt-header h3 {
+        font-size: 16px;
+        color: #1e293b;
+        margin: 0;
+      }
+
+      .prompt-textarea {
+        flex: 1;
+        padding: 16px;
+        resize: none;
+        border: none;
+        outline: none;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #1e293b;
+      }
+
+      .sample-questions {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        background: white;
+        padding: 16px;
+      }
+
+      .sample-questions h3 {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .question-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .question {
+        background: #f1f5f9;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #1e293b;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+      }
+
+      .question:hover {
+        background: #e2e8f0;
+        border-color: #cbd5e1;
+        transform: translateX(4px);
+      }
+
+      .config-display {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+      }
+
+      .config-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .config-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .config-label {
+        font-size: 11px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+      }
+
+      .config-value {
+        font-size: 14px;
+        color: #1e293b;
+        font-weight: 500;
+        word-break: break-all;
+      }
+
+      .embed-code {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 20px;
+        border-radius: 12px;
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        overflow-x: auto;
+        margin-top: 20px;
+      }
+
+      .embed-code .comment {
+        color: #64748b;
+      }
+
+      .embed-code .tag {
+        color: #ef4444;
+      }
+
+      .embed-code .attr {
+        color: #10b981;
+      }
+
+      .embed-code .value {
+        color: #fbbf24;
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: #10b981;
+        color: white;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .status-badge::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: white;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .loading {
+        display: none;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      .loading.active {
+        display: block;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e2e8f0;
+        border-top-color: #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .notification {
+        position: fixed;
+        top: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        animation: slideDown 0.3s ease-out;
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+      }
+
+      .notification.success {
+        background: #10b981;
+      }
+
+      .notification.error {
+        background: #ef4444;
+      }
+
+      .notification.info {
+        background: #3b82f6;
+      }
+
+      @keyframes slideDown {
+        from {
+          transform: translate(-50%, -20px);
+          opacity: 0;
+        }
+        to {
+          transform: translate(-50%, 0);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 1024px) {
+        .chat-container {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          grid-row: 1;
+        }
+
+        .iframe-wrapper {
+          height: 500px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+
+        .header h1 {
+          font-size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>🎮 AutoRAG Playground</h1>
+      <div class="controls">
+        <div class="control-group">
+          <label>Language</label>
+          <select id="language">
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+            <option value="it">Italiano</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Category</label>
+          <select id="category">
+            <option value="fiction">Fiction</option>
+            <option value="non-fiction">Non-Fiction</option>
+            <option value="reference">Reference</option>
+            <option value="science">Science</option>
+            <option value="technology">Technology</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Product</label>
+          <select id="product">
+            <!-- Will be populated dynamically based on category -->
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>AI Provider</label>
+          <select id="provider">
+            <option value="workers-ai">Workers AI (Free)</option>
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Model</label>
+          <select id="model">
+            <!-- Will be populated dynamically based on provider -->
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Theme</label>
+          <select id="theme">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Position</label>
+          <select id="position">
+            <option value="bottom-right">Bottom Right</option>
+            <option value="bottom-left">Bottom Left</option>
+            <option value="top-right">Top Right</option>
+            <option value="top-left">Top Left</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Button Text</label>
+          <input type="text" id="button-text" value="Chat with AI" placeholder="Custom button text" />
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="applySettings()">
+          <span>🚀</span>
+          Apply Settings
+        </button>
+        <button class="btn btn-secondary" onclick="resetSettings()">
+          <span>🔄</span>
+          Reset All
+        </button>
+        <button class="btn btn-tertiary" onclick="openStandalone()">
+          <span>💬</span>
+          Open Standalone
+        </button>
+        <button class="btn btn-tertiary" onclick="openR2Browser()">
+          <span>📁</span>
+          R2 Browser
+        </button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="playground-section">
+        <div class="section-header">
+          <h2>Interactive Chat Interface</h2>
+          <div class="status-badge">Live Preview</div>
+        </div>
+
+        <div class="chat-container">
+          <div class="iframe-wrapper">
+            <div class="loading" id="loading">
+              <div class="spinner"></div>
+              <p style="margin-top: 10px; color: #64748b">Loading chat interface...</p>
+            </div>
+            <iframe id="chat-iframe" src="iframe.html"></iframe>
+          </div>
+
+          <div class="sidebar">
+            <div class="prompt-editor">
+              <div class="prompt-header">
+                <h3>System Prompt</h3>
+              </div>
+              <textarea
+                id="system-prompt"
+                class="prompt-textarea"
+                placeholder="Enter a custom system prompt to modify the assistant's behavior..."
+              >
+You are a helpful AI assistant specializing in library and literature topics. Provide accurate, detailed responses based on the available documentation. Always maintain a professional and informative tone.</textarea
+              >
+            </div>
+
+            <div class="sample-questions">
+              <h3>Sample Questions</h3>
+              <div class="question-list" id="questions">
+                <!-- Will be populated dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-display">
+          <h3 style="color: #1e293b; margin-bottom: 8px">Current Configuration</h3>
+          <div class="config-grid" id="config-grid">
+            <!-- Will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="playground-section">
+        <h2>Integration Code</h2>
+        <div class="embed-code" id="embed-code">
+          <!-- Will be populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Import configuration service
+      import { getConfigService } from './config-service.js';
+
+      // Configuration service instance
+      let configService = null;
+      let dynamicConfig = null;
+
+      // Cached data from API
+      let availableLanguages = [];
+      let availableCategories = [];
+      let availableProviders = [];
+      let availableModels = {};
+      let productsByCategory = {};
+
+      const sampleQuestions = {
+        en: [
+          'What are the main themes in classic literature?',
+          'Can you recommend books about artificial intelligence?',
+          "Explain the hero's journey in storytelling",
+          'What is the difference between fiction and non-fiction?',
+          'How do I properly cite sources in academic writing?',
+        ],
+        de: [
+          'Was sind die Hauptthemen der klassischen Literatur?',
+          'Können Sie Bücher über künstliche Intelligenz empfehlen?',
+          'Erklären Sie die Heldenreise im Storytelling',
+          'Was ist der Unterschied zwischen Belletristik und Sachbuch?',
+          'Wie zitiere ich Quellen korrekt?',
+        ],
+        fr: [
+          'Quels sont les thèmes principaux de la littérature classique?',
+          "Pouvez-vous recommander des livres sur l'intelligence artificielle?",
+          'Expliquez le voyage du héros dans la narration',
+          'Quelle est la différence entre fiction et non-fiction?',
+          'Comment citer correctement les sources?',
+        ],
+        it: [
+          'Quali sono i temi principali della letteratura classica?',
+          "Puoi consigliare libri sull'intelligenza artificiale?",
+          "Spiega il viaggio dell'eroe nella narrazione",
+          'Qual è la differenza tra narrativa e saggistica?',
+          'Come cito correttamente le fonti?',
+        ],
+      };
+
+      // Initialize
+      async function init() {
+        // Get API URL from deployment config
+        let apiUrl = null;
+
+        try {
+          const response = await fetch('/deployment-config.json');
+          if (response.ok) {
+            const config = await response.json();
+            if (config.worker_url) {
+              apiUrl = config.worker_url;
+            }
+          }
+        } catch (e) {
+          console.log('Could not load deployment config');
+        }
+
+        // Fallback to current origin for same-origin deployments
+        if (!apiUrl) {
+          console.warn('No API URL configured in deployment-config.json, using current origin');
+          apiUrl = window.location.origin;
+        }
+
+        // Initialize configuration service
+        configService = getConfigService(apiUrl);
+
+        // Load dynamic configuration
+        await loadDynamicConfiguration();
+
+        // Update UI with loaded configuration
+        await updateLanguageOptions();
+        await updateCategoryOptions();
+        await updateProviderOptions();
+
+        await updateProducts();
+        await updateModels();
+        updateQuestions();
+        updateConfiguration();
+        updateEmbedCode();
+
+        // Add event listeners
+        document.getElementById('category').addEventListener('change', updateProducts);
+        document.getElementById('provider').addEventListener('change', updateModels);
+        document.getElementById('language').addEventListener('change', updateQuestions);
+
+        // Load initial iframe
+        setTimeout(() => {
+          applySettings();
+        }, 100);
+      }
+
+      // Load dynamic configuration from API
+      async function loadDynamicConfiguration() {
+        try {
+          // Load full configuration
+          dynamicConfig = await configService.getConfiguration();
+
+          // Load specific configuration sections
+          availableLanguages = await configService.getLanguages();
+          availableCategories = await configService.getCategories();
+          availableProviders = await configService.getProviders();
+          availableModels = await configService.getModels();
+
+          // Build products mapping
+          for (const category of availableCategories) {
+            if (category.id !== 'general') {
+              const products = await configService.getProducts(category.id);
+              productsByCategory[category.id] = products.map((p) => p.id);
+            }
+          }
+
+          console.log('Dynamic configuration loaded successfully');
+        } catch (error) {
+          console.error('Failed to load dynamic configuration:', error);
+          // Use fallback configuration
+          availableLanguages = [
+            { code: 'en', name: 'English', available: true },
+            { code: 'de', name: 'German', available: true },
+            { code: 'fr', name: 'French', available: true },
+            { code: 'it', name: 'Italian', available: true },
+          ];
+          availableCategories = [
+            { id: 'fiction', name: 'Fiction', available: true },
+            { id: 'non-fiction', name: 'Non-Fiction', available: true },
+            { id: 'science', name: 'Science', available: true },
+            { id: 'technology', name: 'Technology', available: true },
+            { id: 'reference', name: 'Reference', available: true },
+          ];
+          productsByCategory = {
+            fiction: ['classic-literature'],
+            'non-fiction': ['personal-development'],
+            science: ['research-methods'],
+            technology: ['programming-languages'],
+            reference: ['library-catalog'],
+          };
+        }
+      }
+
+      // Update language dropdown options
+      async function updateLanguageOptions() {
+        const select = document.getElementById('language');
+        select.innerHTML = '';
+
+        availableLanguages
+          .filter((lang) => lang.available)
+          .forEach((lang) => {
+            const option = document.createElement('option');
+            option.value = lang.code;
+            option.textContent = `${lang.name} (${lang.nativeName || lang.name})`;
+            select.appendChild(option);
+          });
+      }
+
+      // Update category dropdown options
+      async function updateCategoryOptions() {
+        const select = document.getElementById('category');
+        select.innerHTML = '';
+
+        availableCategories
+          .filter((cat) => cat.available && cat.id !== 'general')
+          .forEach((cat) => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name;
+            select.appendChild(option);
+          });
+      }
+
+      // Update provider dropdown options
+      async function updateProviderOptions() {
+        const select = document.getElementById('provider');
+        select.innerHTML = '';
+
+        availableProviders
+          .filter((provider) => provider.available)
+          .forEach((provider) => {
+            const option = document.createElement('option');
+            option.value = provider.id;
+            option.textContent = provider.name + (provider.requiresApiKey ? ' (API Key Required)' : ' (Free)');
+            select.appendChild(option);
+          });
+      }
+
+      // Update products based on category
+      async function updateProducts() {
+        const category = document.getElementById('category').value;
+        const productSelect = document.getElementById('product');
+
+        productSelect.innerHTML = '';
+
+        // Try to get products from API first
+        if (configService && category) {
+          try {
+            const products = await configService.getProducts(category);
+            products.forEach((product) => {
+              const option = document.createElement('option');
+              option.value = product.id;
+              option.textContent =
+                product.name || product.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+              productSelect.appendChild(option);
+            });
+            return;
+          } catch (error) {
+            console.error('Failed to load products dynamically:', error);
+          }
+        }
+
+        // Fallback to cached products
+        const products = productsByCategory[category] || [];
+        products.forEach((product) => {
+          const option = document.createElement('option');
+          option.value = product;
+          option.textContent = product.charAt(0).toUpperCase() + product.slice(1).replace(/-/g, ' ');
+          productSelect.appendChild(option);
+        });
+      }
+
+      // Update models based on provider
+      async function updateModels() {
+        const providerId = document.getElementById('provider').value;
+        const modelSelect = document.getElementById('model');
+
+        modelSelect.innerHTML = '';
+
+        // Try to get models from API first
+        if (configService && providerId) {
+          try {
+            const models = await configService.getModels(providerId);
+
+            // Find the provider to get its model list
+            const provider = availableProviders.find((p) => p.id === providerId);
+            if (provider && provider.models) {
+              provider.models.forEach((modelId) => {
+                const modelConfig = models[modelId] || availableModels[modelId];
+                if (modelConfig && modelConfig.available) {
+                  const option = document.createElement('option');
+                  option.value = modelId;
+                  option.textContent = modelConfig.displayName || modelId;
+                  modelSelect.appendChild(option);
+                }
+              });
+            }
+            return;
+          } catch (error) {
+            console.error('Failed to load models dynamically:', error);
+          }
+        }
+
+        // Fallback to basic models
+        const fallbackModels = {
+          'workers-ai': [{ value: '@cf/meta/llama-3.2-3b-instruct', label: 'Llama 3.2 3B' }],
+          openai: [
+            { value: 'gpt-4o', label: 'GPT-4o' },
+            { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+          ],
+          anthropic: [{ value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' }],
+        };
+
+        const models = fallbackModels[providerId] || [];
+        models.forEach((model) => {
+          const option = document.createElement('option');
+          option.value = model.value;
+          option.textContent = model.label;
+          modelSelect.appendChild(option);
+        });
+      }
+
+      // Update sample questions based on language
+      function updateQuestions() {
+        const language = document.getElementById('language').value;
+        const questionList = document.getElementById('questions');
+
+        questionList.innerHTML = '';
+        sampleQuestions[language].forEach((question) => {
+          const div = document.createElement('div');
+          div.className = 'question';
+          div.textContent = question;
+          div.onclick = () => copyToClipboard(question);
+          questionList.appendChild(div);
+        });
+      }
+
+      // Update configuration display
+      function updateConfiguration() {
+        const config = {
+          Language: document.getElementById('language').value,
+          Category: document.getElementById('category').value,
+          Product: document.getElementById('product').value,
+          Provider: document.getElementById('provider').value,
+          Model: document.getElementById('model').value,
+          Theme: document.getElementById('theme').value,
+          Position: document.getElementById('position').value,
+          'Button Text': document.getElementById('button-text').value,
+        };
+
+        const configGrid = document.getElementById('config-grid');
+        configGrid.innerHTML = '';
+
+        Object.entries(config).forEach(([key, value]) => {
+          const item = document.createElement('div');
+          item.className = 'config-item';
+          item.innerHTML = `
+          <div class="config-label">${key}</div>
+          <div class="config-value">${value}</div>
+        `;
+          configGrid.appendChild(item);
+        });
+      }
+
+      // Update embed code
+      function updateEmbedCode() {
+        const language = document.getElementById('language').value;
+        const category = document.getElementById('category').value;
+        const product = document.getElementById('product').value;
+        const provider = document.getElementById('provider').value;
+        const model = document.getElementById('model').value;
+        const theme = document.getElementById('theme').value;
+        const position = document.getElementById('position').value;
+        const buttonText = document.getElementById('button-text').value;
+
+        const code = `<span class="comment"><!-- AutoRAG Widget Integration --></span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="value">"./autorag-widget.min.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+<span class="tag">&lt;autorag-widget</span>
+  <span class="attr">language</span>=<span class="value">"${language}"</span>
+  <span class="attr">category</span>=<span class="value">"${category}"</span>
+  <span class="attr">product</span>=<span class="value">"${product}"</span>
+  <span class="attr">provider</span>=<span class="value">"${provider}"</span>
+  <span class="attr">model</span>=<span class="value">"${model}"</span>
+  <span class="attr">theme</span>=<span class="value">"${theme}"</span>
+  <span class="attr">position</span>=<span class="value">"${position}"</span>
+  <span class="attr">button-text</span>=<span class="value">"${buttonText}"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;/autorag-widget&gt;</span>`;
+
+        document.getElementById('embed-code').innerHTML = code;
+      }
+
+      // Apply settings
+      function applySettings() {
+        const language = document.getElementById('language').value;
+        const category = document.getElementById('category').value;
+        const product = document.getElementById('product').value;
+        const provider = document.getElementById('provider').value;
+        const model = document.getElementById('model').value;
+        const theme = document.getElementById('theme').value;
+        const position = document.getElementById('position').value;
+        const buttonText = document.getElementById('button-text').value;
+        const systemPrompt = document.getElementById('system-prompt').value;
+
+        const params = new URLSearchParams({
+          language,
+          category,
+          product,
+          provider,
+          model,
+          theme,
+          position,
+          'button-text': buttonText,
+        });
+
+        if (systemPrompt && systemPrompt.trim()) {
+          params.set('systemPrompt', encodeURIComponent(systemPrompt));
+        }
+
+        // Show loading
+        document.getElementById('loading').classList.add('active');
+
+        // Update iframe
+        const iframe = document.getElementById('chat-iframe');
+        iframe.src = `iframe.html?${params.toString()}`;
+
+        // Hide loading after iframe loads
+        iframe.onload = () => {
+          setTimeout(() => {
+            document.getElementById('loading').classList.remove('active');
+          }, 500);
+        };
+
+        updateConfiguration();
+        updateEmbedCode();
+        showNotification('Settings applied successfully!', 'success');
+      }
+
+      // Reset settings
+      function resetSettings() {
+        document.getElementById('language').value = 'en';
+        document.getElementById('category').value = 'fiction';
+        document.getElementById('provider').value = 'workers-ai';
+        document.getElementById('theme').value = 'light';
+        document.getElementById('position').value = 'bottom-right';
+        document.getElementById('button-text').value = 'Chat with AI';
+        document.getElementById('system-prompt').value =
+          'You are a helpful AI assistant specializing in library and literature topics. Provide accurate, detailed responses based on the available documentation. Always maintain a professional and informative tone.';
+
+        updateProducts();
+        updateModels();
+        updateQuestions();
+
+        // Clear iframe
+        const iframe = document.getElementById('chat-iframe');
+        iframe.src = 'about:blank';
+
+        setTimeout(() => {
+          applySettings();
+        }, 100);
+
+        showNotification('Settings reset to defaults!', 'info');
+      }
+
+      // Open standalone chat
+      function openStandalone() {
+        const language = document.getElementById('language').value;
+        const category = document.getElementById('category').value;
+        const product = document.getElementById('product').value;
+        const provider = document.getElementById('provider').value;
+        const model = document.getElementById('model').value;
+        const theme = document.getElementById('theme').value;
+
+        const params = new URLSearchParams({
+          language,
+          category,
+          product,
+          provider,
+          model,
+          theme,
+        });
+
+        window.open(`/?${params.toString()}`, '_blank');
+      }
+
+      // Open R2 Browser
+      function openR2Browser() {
+        window.open('r2browser.html', '_blank');
+      }
+
+      // Copy to clipboard
+      function copyToClipboard(text) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            showNotification('Copied to clipboard!', 'success');
+          })
+          .catch(() => {
+            showNotification('Failed to copy', 'error');
+          });
+      }
+
+      // Show notification
+      function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.style.animation = 'slideDown 0.3s ease-out reverse';
+          setTimeout(() => notification.remove(), 300);
+        }, 2000);
+      }
+
+      // Initialize on load
+      window.addEventListener('DOMContentLoaded', init);
+    </script>
+  </body>
+</html>

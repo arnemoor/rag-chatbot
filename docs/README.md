@@ -1,0 +1,23 @@
+# AutoRAG Documentation
+
+## Essential Docs
+
+- **[Quick Start](./ESSENTIAL.md)** - Get up and running in 5 minutes
+- **[Setup Guide](./SETUP.md)** - Detailed setup instructions
+- **[API Token Setup](./API_TOKEN_SETUP.md)** - Configure Cloudflare permissions
+- **[Troubleshooting](./TROUBLESHOOTING.md)** - Common issues and solutions
+
+## For Developers
+
+- **[API Reference](./developers/api-reference.md)** - Endpoint documentation
+- **[Widget Integration](./developers/widget-integration.md)** - Embed the widget
+- **[Development Guide](./developers/development-guide.md)** - Local development
+
+## Architecture
+
+- **[System Architecture](./architects/system-architecture.md)** - Technical overview
+- **[Deployment Options](./architects/deployment-options.md)** - Deployment strategies
+
+## Internal
+
+Development notes and improvement plans are in `docs/internal/`

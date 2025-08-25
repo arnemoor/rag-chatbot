@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>R2 Bucket Browser - AutoRAG</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f8fafc;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+      }
+
+      .header h1 {
+        color: #1e293b;
+        font-size: 24px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .header p {
+        color: #64748b;
+        font-size: 14px;
+      }
+
+      .config-info {
+        background: #e0f2fe;
+        border: 1px solid #7dd3fc;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .config-info .icon {
+        font-size: 20px;
+      }
+
+      .config-info .details {
+        flex: 1;
+      }
+
+      .config-info .label {
+        font-size: 12px;
+        color: #0369a1;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .config-info .value {
+        font-size: 14px;
+        color: #0c4a6e;
+        font-family: 'Courier New', monospace;
+      }
+
+      .browser-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      .browser-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #64748b;
+      }
+
+      .breadcrumb a {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+
+      .breadcrumb a:hover {
+        text-decoration: underline;
+      }
+
+      .breadcrumb span {
+        color: #94a3b8;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .btn {
+        padding: 6px 12px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn:hover {
+        background: #2563eb;
+      }
+
+      .btn:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+      }
+
+      .file-list {
+        padding: 20px;
+        min-height: 400px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 60px;
+        color: #64748b;
+      }
+
+      .error {
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin: 20px;
+        color: #991b1b;
+      }
+
+      .empty {
+        text-align: center;
+        padding: 60px;
+        color: #94a3b8;
+      }
+
+      .file-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .file-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+
+      .file-item:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+      }
+
+      .file-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 12px;
+        font-size: 20px;
+      }
+
+      .file-details {
+        flex: 1;
+      }
+
+      .file-name {
+        font-size: 14px;
+        color: #1e293b;
+        font-weight: 500;
+      }
+
+      .file-meta {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 2px;
+      }
+
+      .file-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .file-actions button {
+        padding: 4px 8px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+        color: #475569;
+      }
+
+      .file-actions button:hover {
+        background: #e2e8f0;
+      }
+
+      .stats {
+        padding: 16px 20px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        gap: 24px;
+        font-size: 13px;
+        color: #64748b;
+      }
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .stat-item strong {
+        color: #1e293b;
+      }
+
+      /* Upload area */
+      .upload-area {
+        margin: 20px;
+        padding: 40px;
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        text-align: center;
+        transition: all 0.3s;
+      }
+
+      .upload-area.dragover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+      }
+
+      .upload-area input[type='file'] {
+        display: none;
+      }
+
+      .upload-label {
+        cursor: pointer;
+        color: #64748b;
+      }
+
+      .upload-label:hover {
+        color: #3b82f6;
+      }
+
+      /* Modal */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+      }
+
+      .modal-header {
+        margin-bottom: 16px;
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1e293b;
+      }
+
+      .modal-body {
+        margin-bottom: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #475569;
+        margin-bottom: 6px;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>
+          <span>📦</span>
+          R2 Bucket Browser
+        </h1>
+        <p>Browse and manage documents in your R2 storage bucket</p>
+      </div>
+
+      <div class="config-info">
+        <div class="icon">ℹ️</div>
+        <div class="details">
+          <div class="label">Connected Bucket</div>
+          <div class="value" id="bucket-name">Loading...</div>
+        </div>
+        <div class="details">
+          <div class="label">API Endpoint</div>
+          <div class="value" id="api-endpoint">Loading...</div>
+        </div>
+      </div>
+
+      <div class="browser-container">
+        <div class="browser-header">
+          <div class="breadcrumb" id="breadcrumb">
+            <a href="#" onclick="navigateTo('/')">root</a>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="createFolder()">
+              <span>📁</span>
+              New Folder
+            </button>
+            <button class="btn" onclick="document.getElementById('file-upload').click()">
+              <span>📤</span>
+              Upload Files
+            </button>
+            <input type="file" id="file-upload" multiple style="display: none" onchange="uploadFiles(this.files)" />
+            <button class="btn" onclick="refreshList()">
+              <span>🔄</span>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="file-list" id="file-list">
+          <div class="loading">Loading...</div>
+        </div>
+
+        <div class="stats">
+          <div class="stat-item">
+            <span>📁</span>
+            <span>
+              Folders:
+              <strong id="folder-count">0</strong>
+            </span>
+          </div>
+          <div class="stat-item">
+            <span>📄</span>
+            <span>
+              Files:
+              <strong id="file-count">0</strong>
+            </span>
+          </div>
+          <div class="stat-item">
+            <span>💾</span>
+            <span>
+              Total Size:
+              <strong id="total-size">0 B</strong>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Folder Modal -->
+    <div class="modal" id="folder-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">Create New Folder</div>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Folder Name</label>
+            <input type="text" class="form-input" id="folder-name" placeholder="Enter folder name" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" style="background: #94a3b8" onclick="closeModal('folder-modal')">Cancel</button>
+          <button class="btn" onclick="submitCreateFolder()">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Configuration - will be dynamically set
+      let API_URL = '';
+      let BUCKET_NAME = '';
+      let currentPath = '';
+
+      // Initialize
+      async function init() {
+        // Try to get API URL from deployment config first
+        try {
+          // Check if deployment config is available (injected during build)
+          if (typeof DEPLOYMENT_CONFIG !== 'undefined') {
+            API_URL = DEPLOYMENT_CONFIG.worker_url;
+          }
+        } catch (e) {
+          // Config not available, fall back to detection
+        }
+
+        // If no config, detect based on environment
+        if (!API_URL) {
+          const currentOrigin = window.location.origin;
+
+          if (currentOrigin.includes('localhost') || currentOrigin.includes('127.0.0.1')) {
+            // Development mode
+            API_URL = 'http://localhost:8787';
+          } else if (currentOrigin.includes('.pages.dev')) {
+            // On Pages, try to read from deployment-config.json
+            try {
+              const configResponse = await fetch('/deployment-config.json');
+              if (configResponse.ok) {
+                const config = await configResponse.json();
+                API_URL = config.worker_url;
+              }
+            } catch (e) {
+              // If config file not found, show error
+              showError('Configuration not found. Please run the deployment script.');
+              return;
+            }
+          } else {
+            // Same origin deployment
+            API_URL = '';
+          }
+        }
+
+        // Get bucket info from API
+        try {
+          const response = await fetch(`${API_URL}/health`);
+          if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              const data = await response.json();
+              if (data.config && data.config.r2_bucket) {
+                BUCKET_NAME = data.config.r2_bucket;
+              }
+            }
+          }
+        } catch (error) {
+          console.warn('Could not fetch bucket info from API:', error);
+        }
+
+        // Fallback bucket name
+        if (!BUCKET_NAME) {
+          BUCKET_NAME = 'library-docs-01';
+        }
+
+        // Update UI
+        document.getElementById('bucket-name').textContent = BUCKET_NAME;
+        document.getElementById('api-endpoint').textContent = API_URL || 'Same Origin';
+
+        // Load initial list
+        await loadList('/');
+      }
+
+      // Load file list
+      async function loadList(path) {
+        currentPath = path;
+        const fileList = document.getElementById('file-list');
+        fileList.innerHTML = '<div class="loading">Loading...</div>';
+
+        try {
+          // For root directory, send empty prefix instead of '/'
+          const prefix = path === '/' ? '' : path;
+          const response = await fetch(`${API_URL}/r2/list?prefix=${encodeURIComponent(prefix)}`);
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          renderFileList(data);
+          updateBreadcrumb(path);
+        } catch (error) {
+          fileList.innerHTML = `<div class="error">Error loading files: ${error.message}</div>`;
+        }
+      }
+
+      // Render file list
+      function renderFileList(data) {
+        const fileList = document.getElementById('file-list');
+
+        if (!data.objects.length && !data.delimitedPrefixes.length) {
+          fileList.innerHTML = '<div class="empty">📭 This folder is empty</div>';
+          updateStats(0, 0, 0);
+          return;
+        }
+
+        let html = '<div class="file-grid">';
+        let folderCount = 0;
+        let fileCount = 0;
+        let totalSize = 0;
+
+        // Render folders (delimited prefixes)
+        data.delimitedPrefixes.forEach((prefix) => {
+          folderCount++;
+          // Handle root path properly
+          const pathToRemove = currentPath === '/' ? '' : currentPath;
+          const folderName = prefix.replace(pathToRemove, '').replace(/\/$/, '');
+          html += `
+          <div class="file-item" onclick="navigateTo('${prefix}')">
+            <div class="file-icon">📁</div>
+            <div class="file-details">
+              <div class="file-name">${folderName}</div>
+              <div class="file-meta">Folder</div>
+            </div>
+          </div>
+        `;
+        });
+
+        // Render files
+        data.objects.forEach((obj) => {
+          // Skip placeholder files
+          if (obj.key.endsWith('.placeholder')) return;
+
+          // Skip files that are actually folders (have trailing slash)
+          if (obj.key.endsWith('/')) return;
+
+          fileCount++;
+          totalSize += obj.size;
+          // Handle root path properly
+          const pathToRemove = currentPath === '/' ? '' : currentPath;
+          const fileName = obj.key.replace(pathToRemove, '');
+          const fileExt = fileName.split('.').pop().toLowerCase();
+          const icon = getFileIcon(fileExt);
+
+          html += `
+          <div class="file-item">
+            <div class="file-icon">${icon}</div>
+            <div class="file-details">
+              <div class="file-name">${fileName}</div>
+              <div class="file-meta">${formatSize(obj.size)} • ${formatDate(obj.uploaded)}</div>
+            </div>
+            <div class="file-actions">
+              <button onclick="downloadFile('${obj.key}'); event.stopPropagation();">Download</button>
+              <button onclick="deleteFile('${obj.key}'); event.stopPropagation();">Delete</button>
+            </div>
+          </div>
+        `;
+        });
+
+        html += '</div>';
+        fileList.innerHTML = html;
+        updateStats(folderCount, fileCount, totalSize);
+      }
+
+      // Update breadcrumb
+      function updateBreadcrumb(path) {
+        const breadcrumb = document.getElementById('breadcrumb');
+        const parts = path.split('/').filter((p) => p);
+
+        let html = '<a href="#" onclick="navigateTo(\'/\')">root</a>';
+        let currentPath = '';
+
+        parts.forEach((part, index) => {
+          currentPath += part + '/';
+          html += ' <span>/</span> ';
+          if (index === parts.length - 1) {
+            html += `<span>${part}</span>`;
+          } else {
+            html += `<a href="#" onclick="navigateTo('${currentPath}')">${part}</a>`;
+          }
+        });
+
+        breadcrumb.innerHTML = html;
+      }
+
+      // Update stats
+      function updateStats(folders, files, size) {
+        document.getElementById('folder-count').textContent = folders;
+        document.getElementById('file-count').textContent = files;
+        document.getElementById('total-size').textContent = formatSize(size);
+      }
+
+      // Navigate to path
+      function navigateTo(path) {
+        loadList(path);
+      }
+
+      // Refresh list
+      function refreshList() {
+        loadList(currentPath);
+      }
+
+      // Create folder
+      function createFolder() {
+        document.getElementById('folder-modal').classList.add('active');
+        document.getElementById('folder-name').value = '';
+        document.getElementById('folder-name').focus();
+      }
+
+      // Submit create folder
+      async function submitCreateFolder() {
+        const folderName = document.getElementById('folder-name').value.trim();
+        if (!folderName) {
+          alert('Please enter a folder name');
+          return;
+        }
+
+        const fullPath = currentPath + folderName;
+
+        try {
+          const response = await fetch(`${API_URL}/r2/folder`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path: fullPath }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          closeModal('folder-modal');
+          refreshList();
+        } catch (error) {
+          alert(`Error creating folder: ${error.message}`);
+        }
+      }
+
+      // Upload files
+      async function uploadFiles(files) {
+        if (!files.length) return;
+
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('path', currentPath);
+
+          try {
+            const response = await fetch(`${API_URL}/r2/upload`, {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+          } catch (error) {
+            alert(`Error uploading ${file.name}: ${error.message}`);
+          }
+        }
+
+        refreshList();
+      }
+
+      // Download file
+      async function downloadFile(key) {
+        window.open(`${API_URL}/r2/get/${encodeURIComponent(key)}`, '_blank');
+      }
+
+      // Delete file
+      async function deleteFile(key) {
+        if (!confirm(`Are you sure you want to delete ${key}?`)) return;
+
+        try {
+          const response = await fetch(`${API_URL}/r2/delete/${encodeURIComponent(key)}`, {
+            method: 'DELETE',
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          refreshList();
+        } catch (error) {
+          alert(`Error deleting file: ${error.message}`);
+        }
+      }
+
+      // Close modal
+      function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+      }
+
+      // Get file icon
+      function getFileIcon(ext) {
+        const icons = {
+          pdf: '📕',
+          md: '📝',
+          txt: '📄',
+          doc: '📘',
+          docx: '📘',
+          xls: '📊',
+          xlsx: '📊',
+          png: '🖼️',
+          jpg: '🖼️',
+          jpeg: '🖼️',
+          json: '🔧',
+          html: '🌐',
+          csv: '📊',
+        };
+        return icons[ext] || '📄';
+      }
+
+      // Format file size
+      function formatSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+      }
+
+      // Format date
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+      }
+
+      // Drag and drop support
+      document.addEventListener('DOMContentLoaded', () => {
+        const fileList = document.getElementById('file-list');
+
+        fileList.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          fileList.classList.add('dragover');
+        });
+
+        fileList.addEventListener('dragleave', () => {
+          fileList.classList.remove('dragover');
+        });
+
+        fileList.addEventListener('drop', (e) => {
+          e.preventDefault();
+          fileList.classList.remove('dragover');
+          uploadFiles(e.dataTransfer.files);
+        });
+
+        // Initialize on load
+        init();
+      });
+    </script>
+  </body>
+</html>

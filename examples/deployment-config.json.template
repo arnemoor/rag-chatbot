@@ -1,0 +1,10 @@
+{
+  "worker_url": "{{WORKER_URL}}",
+  "widget_url": "{{WIDGET_URL}}",
+  "deployed_at": "{{DEPLOYED_AT}}",
+  "environment": {
+    "account_id": "{{ACCOUNT_ID}}",
+    "worker_name": "{{WORKER_NAME}}",
+    "pages_project": "{{PAGES_PROJECT}}"
+  }
+}
