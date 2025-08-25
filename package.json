@@ -1,7 +1,7 @@
 {
-  "name": "autorag-clean",
+  "name": "rag-chatbot",
   "version": "1.0.0",
-  "description": "AutoRAG Clean - Open-source framework for RAG-powered chatbots",
+  "description": "RAG Chatbot - Open-source framework for RAG-powered chatbots",
   "private": true,
   "scripts": {
     "test": "./scripts/test-all.sh",
