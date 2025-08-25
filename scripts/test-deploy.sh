@@ -7,7 +7,9 @@ echo "=============================================="
 
 # Load .env
 if [ -f ".env" ]; then
-    export $(grep -v '^#' .env | xargs)
+    set -a  # Enable automatic export of all variables
+    source .env
+    set +a  # Disable automatic export
     echo "✓ .env file loaded"
 else
     echo "✗ .env file not found"

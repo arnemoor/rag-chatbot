@@ -51,8 +51,10 @@ if [ ! -f ".env" ]; then
     fi
 fi
 
-# Load environment variables
+# Load environment variables and export them for child processes
+set -a  # Enable automatic export of all variables
 source .env
+set +a  # Disable automatic export
 
 # Validate required variables
 if [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
