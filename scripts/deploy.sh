@@ -88,14 +88,41 @@ if [ ! -d "node_modules" ]; then
     npm install --silent
 fi
 
+# Check if wrangler is available
+if ! command -v wrangler &> /dev/null && ! npx wrangler --version &> /dev/null; then
+    print_error "wrangler CLI not found. Please run ./scripts/install-dependencies.sh first"
+    exit 1
+fi
+
+# Configure wrangler.toml from template (always regenerate)
+if [ -f "wrangler.toml.template" ]; then
+    print_info "Generating wrangler.toml from template..."
+    sed -e "s/{{WORKER_NAME}}/$WORKER_NAME/g" \
+        -e "s/{{CLOUDFLARE_ACCOUNT_ID}}/$CLOUDFLARE_ACCOUNT_ID/g" \
+        -e "s/{{AUTORAG_INSTANCE_ID}}/$AUTORAG_INSTANCE_ID/g" \
+        -e "s/{{AI_GATEWAY_NAME}}/autorag-gateway/g" \
+        -e "s/{{R2_BUCKET_NAME}}/$R2_BUCKET/g" \
+        wrangler.toml.template > wrangler.toml
+    print_success "Worker configuration generated"
+else
+    print_error "wrangler.toml.template not found!"
+    exit 1
+fi
+
 # Deploy worker
-WORKER_OUTPUT=$(npx wrangler deploy 2>&1)
+print_info "Running wrangler deploy (this may take a moment)..."
+WORKER_OUTPUT=$(npx wrangler deploy 2>&1) || {
+    print_error "Worker deployment failed:"
+    echo "$WORKER_OUTPUT"
+    exit 1
+}
 
 # Extract Worker URL
 WORKER_URL=$(echo "$WORKER_OUTPUT" | grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' | head -1)
 
 if [ -z "$WORKER_URL" ]; then
-    print_error "Failed to deploy Worker or extract URL"
+    print_error "Failed to extract Worker URL from deployment output"
+    echo "Deployment output:"
     echo "$WORKER_OUTPUT"
     exit 1
 fi
@@ -142,6 +169,13 @@ cd "$PROJECT_ROOT/widget"
 if [ ! -d "node_modules" ]; then
     print_info "Installing widget dependencies..."
     npm install --silent
+fi
+
+# Generate wrangler.toml from template if needed
+if [ -f "wrangler.toml.template" ]; then
+    print_info "Generating widget wrangler.toml from template..."
+    sed -e "s/{{PAGES_PROJECT_NAME}}/$PAGES_PROJECT/g" \
+        wrangler.toml.template > wrangler.toml
 fi
 
 # Generate config.js from template

@@ -18,32 +18,32 @@ A production-ready, deployment-agnostic RAG (Retrieval-Augmented Generation) cha
 ### Prerequisites
 
 - Cloudflare account (free tier works)
-- Node.js 18+ and npm
+- Node.js 18+ and npm (Node 20+ recommended for all features)
 - Git
-- Cloudflare API Token - See [API_TOKEN_SETUP.md](docs/API_TOKEN_SETUP.md) for setup
 
-### Deploy in 3 Steps
+### Quick Start
 
 ```bash
-# 1. Clone the repository
+# 1. Clone and setup
 git clone https://github.com/arnemoor/rag-chatbot.git
 cd rag-chatbot
 
-# 2. Configure your Cloudflare credentials
-cp examples/.env.basic .env
-# Edit .env with your Cloudflare Account ID and API Token
-
-# 3. Deploy to YOUR Cloudflare infrastructure
-./scripts/setup.sh
+# 2. Follow the setup guide
+# See docs/SETUP.md for detailed instructions
 ```
 
-That's it! The script will:
-- Create R2 bucket for document storage
-- Guide you through AutoRAG instance creation
-- Deploy the Worker API to YOUR account
-- Deploy the Widget to YOUR Cloudflare Pages
-- Configure all URLs automatically
-- Provide you with integration code
+📖 **[Complete Setup Guide →](docs/SETUP.md)**
+
+**Manual steps required:**
+1. Create AutoRAG instance in Cloudflare Dashboard
+2. Create API Token with proper permissions
+3. Copy credentials to .env file
+
+**Automated by scripts:**
+- R2 bucket creation
+- Worker deployment
+- Widget deployment
+- URL configuration
 
 ## 📋 What You'll Get
 

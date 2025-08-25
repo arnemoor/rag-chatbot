@@ -1,4 +1,4 @@
-# Setup Guide - AutoRAG Clean
+# Setup Guide - RAG Chatbot
 
 This guide walks you through setting up and deploying the AutoRAG library document Q&A system.
 
@@ -11,9 +11,17 @@ This guide walks you through setting up and deploying the AutoRAG library docume
    - AI Gateway configured (optional, for external models)
 
 2. **Development Environment**:
-   - Node.js 18+ and npm
+   - Node.js 20+ recommended (18+ minimum)
+   - npm 8+
    - Git
    - Wrangler CLI (installed automatically)
+
+   **Ubuntu Users**: Ubuntu 24.04 defaults to Node 18. For best compatibility:
+   ```bash
+   # Add NodeSource repository for Node 20
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt-get install -y nodejs
+   ```
 
 3. **API Credentials**:
    - Cloudflare Account ID
@@ -26,8 +34,8 @@ This guide walks you through setting up and deploying the AutoRAG library docume
 ## Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/your-org/auto-rag-clean.git
-cd auto-rag-clean
+git clone https://github.com/arnemoor/rag-chatbot.git
+cd rag-chatbot
 ```
 
 ## Step 2: Install Dependencies
@@ -41,59 +49,82 @@ This installs:
 - Widget dependencies
 - Wrangler CLI (if not globally installed)
 
+**Note for Linux/Ubuntu users**: If prompted to install wrangler globally:
+- Option 1: Answer 'y' and then run `sudo npm install -g wrangler` manually
+- Option 2: Run the script with sudo: `sudo ./scripts/install-dependencies.sh`
+- Option 3: Skip global install and use local wrangler with `npx wrangler`
+
 ## Step 3: Configure Environment
 
-### Create .env file
+### Manual Setup in Cloudflare Dashboard (Do this FIRST):
+
+#### 1. Create API Token:
+- Go to: My Profile → API Tokens → Create Token
+- Use "Custom token" with these permissions:
+  - Account: AutoRAG:Edit
+  - Account: Cloudflare Workers R2 Storage:Edit  
+  - Account: Workers Scripts:Edit
+  - Account: Cloudflare Pages:Edit
+- Copy the token immediately!
+
+#### 2. Create R2 Bucket:
+- Go to: R2 → Create bucket
+- Name: `rag-chatbot-docs` (or your preferred name)
+- Location: Automatic
+- Leave all other settings as default
+
+#### 3. Create AutoRAG Instance:
+- Go to: AI → AutoRAG → Create new instance
+- Name: `my-rag-chatbot` (or your preferred name)
+- Select the R2 bucket you just created
+- Configure indexing (use defaults for testing)
+- Create the instance
+
+### Configure .env file:
 
 ```bash
-cp .env.example .env
+cp examples/.env.basic .env
 ```
 
-### Edit .env with your values
+Edit .env with the values from above:
 
 ```env
-# Required - Cloudflare Configuration
+# From Cloudflare Dashboard (right sidebar)
 CLOUDFLARE_ACCOUNT_ID=your-account-id
+
+# From step 1: Your API Token
 CLOUDFLARE_API_TOKEN=your-api-token
 
-# Required - AutoRAG Instance
-AUTORAG_INSTANCE_ID=your-autorag-instance-id
+# From step 2: Your R2 bucket name
+R2_BUCKET_NAME=rag-chatbot-docs
+
+# From step 3: Your AutoRAG instance name
+AUTORAG_INSTANCE_ID=my-rag-chatbot
 
 # Optional - External AI Providers
-OPENAI_API_KEY=your-openai-key
-ANTHROPIC_API_KEY=your-anthropic-key
-
-# R2 Bucket (auto-created if not exists)
-R2_BUCKET_NAME=library-docs-01
+OPENAI_API_KEY=     # Leave empty if not using OpenAI
+ANTHROPIC_API_KEY=  # Leave empty if not using Anthropic
 ```
-
-### Get your credentials:
-
-1. **Account ID**: 
-   - Go to Cloudflare Dashboard → Right sidebar → Account ID
-
-2. **API Token**:
-   - Go to My Profile → API Tokens → Create Token
-   - Use "Custom token" template with permissions listed above
-
-3. **AutoRAG Instance ID**:
-   - Go to AI → AutoRAG → Create new instance
-   - Copy the instance name (e.g., "your-instance-abc123")
 
 ## Step 4: Deploy Infrastructure
 
-### Option A: Complete Deployment (Recommended)
+### Option A: Automated Deployment (Recommended)
 
 ```bash
-./scripts/deploy-all.sh
+./scripts/deploy.sh
 ```
 
-This script:
-1. Creates R2 bucket if needed
-2. Deploys Worker API
-3. Deploys Widget to Pages
-4. Uploads sample documents
-5. Updates deployment configuration
+This script will:
+1. Check your configuration
+2. Deploy Worker API to Cloudflare
+3. Deploy Widget to Cloudflare Pages
+4. Generate deployment configuration
+5. Provide you with the URLs
+
+To also upload sample documents:
+```bash
+./scripts/upload-library-documents.sh
+```
 
 ### Option B: Step-by-Step Deployment
 
