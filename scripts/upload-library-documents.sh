@@ -10,8 +10,14 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 
 # Load environment variables
-if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -a
+    source "$PROJECT_ROOT/.env"
+    set +a
+elif [ -f .env ]; then
+    set -a
+    source .env
+    set +a
 fi
 
 # Configuration from environment
@@ -78,7 +84,7 @@ upload_file() {
         # Run from widget directory with npx
         cd "$PROJECT_ROOT/widget"
         npx wrangler r2 object put "$BUCKET_NAME/$target_path" \
-            --file="$PROJECT_ROOT/$source_file" \
+            --file="$source_file" \
             --remote
         cd "$PROJECT_ROOT"
     fi
@@ -117,13 +123,14 @@ echo ""
 # Dynamic upload - scan sample-documents directory structure
 print_info "Scanning sample-documents directory for categories..."
 
-if [ ! -d "sample-documents" ]; then
-    print_error "sample-documents directory not found!"
+SAMPLE_DIR="$PROJECT_ROOT/sample-documents"
+if [ ! -d "$SAMPLE_DIR" ]; then
+    print_error "sample-documents directory not found at $SAMPLE_DIR!"
     exit 1
 fi
 
 # Get all category directories (3-level hierarchy: category/product/language)
-for category_dir in sample-documents/*/; do
+for category_dir in "$SAMPLE_DIR"/*/; do
     if [ -d "$category_dir" ]; then
         category=$(basename "$category_dir")
         print_info "Found category: $category"
