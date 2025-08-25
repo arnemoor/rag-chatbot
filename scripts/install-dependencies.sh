@@ -61,8 +61,8 @@ if ! command -v wrangler &> /dev/null; then
     read -p "Install wrangler globally? (y/n): " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Installing wrangler globally..."
-        npm install -g wrangler
+        print_info "Installing wrangler v4 globally..."
+        npm install -g wrangler@4
         print_success "Wrangler installed globally"
     else
         print_info "Skipping global wrangler installation"
