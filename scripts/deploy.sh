@@ -222,18 +222,17 @@ if echo "$PAGES_CHECK" | grep -qE "(^|\s)$PAGES_PROJECT(\s|$)"; then
     print_info "Using existing Pages project: $PAGES_PROJECT"
 else
     print_info "Creating new Pages project: $PAGES_PROJECT"
-    CREATE_OUTPUT=$(npx wrangler pages project create "$PAGES_PROJECT" --production-branch=main 2>&1) || {
-        # Check if error is because project already exists
-        if echo "$CREATE_OUTPUT" | grep -q "already exists"; then
-            print_info "Pages project already exists, continuing..."
-        else
-            print_error "Failed to create Pages project:"
-            echo "$CREATE_OUTPUT"
-            exit 1
-        fi
-    }
-    if [ $? -eq 0 ]; then
+    CREATE_OUTPUT=$(npx wrangler pages project create "$PAGES_PROJECT" --production-branch=main 2>&1)
+    CREATE_EXIT_CODE=$?
+    
+    if [ $CREATE_EXIT_CODE -eq 0 ]; then
         print_success "Pages project created"
+    elif echo "$CREATE_OUTPUT" | grep -q "already exists"; then
+        print_info "Pages project already exists, continuing..."
+    else
+        print_error "Failed to create Pages project:"
+        echo "$CREATE_OUTPUT"
+        exit 1
     fi
 fi
 
