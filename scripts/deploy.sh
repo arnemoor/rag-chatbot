@@ -218,7 +218,7 @@ print_step "Deploying widget to Cloudflare Pages..."
 # Check if Pages project exists, create if not
 print_info "Checking for Pages project: $PAGES_PROJECT"
 PAGES_CHECK=$(npx wrangler pages project list 2>&1)
-if echo "$PAGES_CHECK" | grep -q "^$PAGES_PROJECT\s"; then
+if echo "$PAGES_CHECK" | grep -qE "(^|\s)$PAGES_PROJECT(\s|$)"; then
     print_info "Using existing Pages project: $PAGES_PROJECT"
 else
     print_info "Creating new Pages project: $PAGES_PROJECT"
