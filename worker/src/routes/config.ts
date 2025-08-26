@@ -266,8 +266,8 @@ export async function handleLegacyCategories(
     return new Response(
       JSON.stringify({
         error: 'Failed to fetch categories',
-        categories: ['fiction', 'non-fiction', 'science', 'technology', 'reference'], // fallback
-        total: 5,
+        categories: [],
+        total: 0,
       }),
       {
         status: 500,

@@ -65,12 +65,11 @@ Send a chat message and receive an AI response with citations.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string | Yes | User's question (max 2000 characters) |
-| `language` | string | No | Response language: `en`, `de`, `fr`, `it` (default: `en`) |
-| `category` | string | No | Document category (default: `fiction`) |
-| `product` | string | No | Product within category (default: `novels`) |
-| `product` | string | Yes | Product documentation to search |
-| `provider` | string | Yes | AI provider selection |
-| `model` | string | Yes | Specific AI model identifier |
+| `language` | string | Yes | Response language (loaded from R2/config) |
+| `category` | string | Yes | Document category (loaded from R2 structure) |
+| `product` | string | Yes | Product within category (loaded from R2 structure) |
+| `provider` | string | Yes | AI provider selection (from config) |
+| `model` | string | Yes | Specific AI model identifier (from config) |
 | `sessionId` | string | No | Session UUID for conversation continuity |
 
 #### Example Request
@@ -80,11 +79,10 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
   -d '{
     "query": "How do I configure database connection for LibraryOnline?",
     "language": "en",
-    "category": "fiction",
-    "product": "novels",
+    "category": "technology",
     "product": "libraryonline",
     "provider": "openai",
-    "model": "gpt-5-mini",
+    "model": "gpt-4o-mini",
     "sessionId": "123e4567-e89b-12d3-a456-426614174000"
   }'
 ```
