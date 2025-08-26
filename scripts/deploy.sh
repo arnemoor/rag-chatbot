@@ -216,16 +216,25 @@ print_success "Widget built"
 print_step "Deploying widget to Cloudflare Pages..."
 
 # Check if Pages project exists, create if not
-PAGES_LIST=$(npx wrangler pages project list 2>/dev/null | grep "^$PAGES_PROJECT$" || true)
-if [ -z "$PAGES_LIST" ]; then
-    print_info "Creating Pages project: $PAGES_PROJECT"
-    npx wrangler pages project create "$PAGES_PROJECT" --production-branch=main >/dev/null 2>&1 || {
-        print_error "Failed to create Pages project"
-        exit 1
-    }
-    print_success "Pages project created"
-else
+print_info "Checking for Pages project: $PAGES_PROJECT"
+PAGES_CHECK=$(npx wrangler pages project list 2>&1)
+if echo "$PAGES_CHECK" | grep -q "^$PAGES_PROJECT\s"; then
     print_info "Using existing Pages project: $PAGES_PROJECT"
+else
+    print_info "Creating new Pages project: $PAGES_PROJECT"
+    CREATE_OUTPUT=$(npx wrangler pages project create "$PAGES_PROJECT" --production-branch=main 2>&1) || {
+        # Check if error is because project already exists
+        if echo "$CREATE_OUTPUT" | grep -q "already exists"; then
+            print_info "Pages project already exists, continuing..."
+        else
+            print_error "Failed to create Pages project:"
+            echo "$CREATE_OUTPUT"
+            exit 1
+        fi
+    }
+    if [ $? -eq 0 ]; then
+        print_success "Pages project created"
+    fi
 fi
 
 # Deploy to Pages
