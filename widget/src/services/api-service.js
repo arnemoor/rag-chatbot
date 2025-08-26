@@ -19,11 +19,11 @@ export class ApiService {
   async sendMessage(params) {
     const {
       query,
-      language = 'en',
-      category = 'general',
-      product = 'library',
-      provider = 'workers-ai',
-      model = '@cf/meta/llama-3.2-3b-instruct',
+      language,
+      category,
+      product,
+      provider,
+      model,
       sessionId,
     } = params;
 

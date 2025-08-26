@@ -464,21 +464,14 @@
         <div class="control-group">
           <label>Language</label>
           <select id="language">
-            <option value="en">English</option>
-            <option value="de">Deutsch</option>
-            <option value="fr">Français</option>
-            <option value="it">Italiano</option>
+            <!-- Will be populated dynamically -->
           </select>
         </div>
 
         <div class="control-group">
           <label>Category</label>
           <select id="category">
-            <option value="fiction">Fiction</option>
-            <option value="non-fiction">Non-Fiction</option>
-            <option value="reference">Reference</option>
-            <option value="science">Science</option>
-            <option value="technology">Technology</option>
+            <!-- Will be populated dynamically -->
           </select>
         </div>
 
@@ -492,9 +485,7 @@
         <div class="control-group">
           <label>AI Provider</label>
           <select id="provider">
-            <option value="workers-ai">Workers AI (Free)</option>
-            <option value="openai">OpenAI</option>
-            <option value="anthropic">Anthropic</option>
+            <!-- Will be populated dynamically -->
           </select>
         </div>
 
@@ -765,7 +756,7 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         select.innerHTML = '';
 
         availableCategories
-          .filter((cat) => cat.available && cat.id !== 'general')
+          .filter((cat) => cat.available)
           .forEach((cat) => {
             const option = document.createElement('option');
             option.value = cat.id;
@@ -990,9 +981,15 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
 
       // Reset settings
       function resetSettings() {
-        document.getElementById('language').value = 'en';
-        document.getElementById('category').value = 'fiction';
-        document.getElementById('provider').value = 'workers-ai';
+        // Reset to first available option for dynamic selects
+        const dynamicSelects = ['language', 'category', 'provider'];
+        dynamicSelects.forEach(id => {
+          const select = document.getElementById(id);
+          if (select && select.options.length > 0) {
+            select.selectedIndex = 0;
+          }
+        });
+        
         document.getElementById('theme').value = 'light';
         document.getElementById('position').value = 'bottom-right';
         document.getElementById('button-text').value = 'Chat with AI';
