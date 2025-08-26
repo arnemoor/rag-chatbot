@@ -378,7 +378,7 @@ export async function handleChat(
     // Set defaults
     const language = chatRequest.language || 'en';
     const category = chatRequest.category || 'fiction';
-    const product = chatRequest.product || 'literature';
+    const product = chatRequest.product || 'novels';
     const provider = chatRequest.provider || 'workers-ai';
     const model = chatRequest.model || '@cf/meta/llama-3.2-3b-instruct';
 
@@ -437,7 +437,7 @@ export async function handleChat(
 
         const response = await autoragBreaker.execute(() =>
           retryWithBackoff(
-            () => env.AI.autorag(env.AUTORAG_INSTANCE_ID).aiSearch({
+            () => env.AI.autorag(env.AUTORAG_INSTANCE).aiSearch({
               query: languageInstruction + chatRequest.query,
               // model: model, // Optional - can specify model if needed
               system_prompt: systemPrompt, // Note: system_prompt, not generation_system_prompt
@@ -481,7 +481,7 @@ export async function handleChat(
         // Step 1: Retrieve relevant chunks using the Search API
         const searchResult = await autoragBreaker.execute(() =>
           retryWithBackoff(
-            () => env.AI.autorag(env.AUTORAG_INSTANCE_ID).search({
+            () => env.AI.autorag(env.AUTORAG_INSTANCE).search({
               query: chatRequest.query,
               filters: filter, // Use the same filter to search only in selected language
               max_num_results: 5, // Limit to 5 most relevant results

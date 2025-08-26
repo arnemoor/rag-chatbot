@@ -316,19 +316,22 @@ window.AutoRAGConfig = {
 - Never commit .env file
 - API keys are stored as Worker secrets
 - R2 bucket is private by default
-- CORS is configured for your domains only
+- **CORS Configuration**:
+  - Development: Defaults to wildcard (*) when ALLOWED_ORIGINS is not set
+  - Production: Set ALLOWED_ORIGINS in wrangler.toml to restrict access
+  - Example: `ALLOWED_ORIGINS = "https://yourdomain.com,https://app.yourdomain.com"`
 - Widget uses DOMPurify for XSS protection
 
 ## Next Steps
 
 1. **Customize Categories**: Edit sample-documents structure
 2. **Add Languages**: Add new language folders
-3. **Configure AI Models**: See documentation/developers/model-configuration.md
+3. **Configure AI Models**: See [Model Configuration](./developers/model-configuration.md)
 4. **Set Up Monitoring**: Configure Worker Analytics
 5. **Custom Styling**: Modify widget/src/autorag-widget.js
 
 ## Support
 
-- Documentation: [Documentation Hub](./documentation/README.md)
+- Documentation: [Documentation Hub](./README.md)
 - Issues: Create an issue in the repository
 - Cloudflare Support: For AutoRAG-specific issues
