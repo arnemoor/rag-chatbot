@@ -641,18 +641,17 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
       // Initialize
       async function init() {
         // Get API URL from deployment config
-        let apiUrl = null;
-
         try {
           const response = await fetch('/deployment-config.json');
           if (response.ok) {
             const config = await response.json();
             if (config.worker_url) {
               apiUrl = config.worker_url;
+              console.log('Using API URL from deployment config:', apiUrl);
             }
           }
         } catch (e) {
-          console.log('Could not load deployment config');
+          console.log('Could not load deployment config:', e);
         }
 
         // Fallback to current origin for same-origin deployments
@@ -660,6 +659,8 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
           console.warn('No API URL configured in deployment-config.json, using current origin');
           apiUrl = window.location.origin;
         }
+
+        console.log('Final API URL:', apiUrl);
 
         // Load dynamic configuration directly from API
         await loadDynamicConfiguration();
