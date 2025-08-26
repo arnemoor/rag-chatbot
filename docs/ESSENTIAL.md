@@ -57,7 +57,7 @@ Set `ALLOWED_ORIGINS` in `.env` or leave empty for wildcard.
 Ensure documents are uploaded and AutoRAG has indexed them.
 
 ### Widget Not Appearing
-Check `data-api-url` points to your worker URL.
+Check `api-url` attribute points to your worker URL.
 
 ## Scripts Reference
 

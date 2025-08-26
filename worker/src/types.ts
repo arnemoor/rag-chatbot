@@ -5,7 +5,7 @@ export interface Env {
   SESSIONS?: KVNamespace;
 
   // Environment variables
-  AUTORAG_INSTANCE_ID: string;
+  AUTORAG_INSTANCE: string;
   GATEWAY_NAME?: string;
   ENVIRONMENT: string;
 

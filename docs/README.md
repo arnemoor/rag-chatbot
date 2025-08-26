@@ -20,4 +20,4 @@
 
 ## Internal
 
-Development notes and improvement plans are in `docs/internal/`
+For development notes and improvement plans, please see the project's issue tracker and roadmap.

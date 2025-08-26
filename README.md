@@ -184,7 +184,6 @@ MIT License - See [LICENSE](./LICENSE) file
 
 ## 🆘 Support
 
-- **Documentation**: [Documentation Hub](./documentation/README.md)
 - **Documentation**: [Documentation Hub](./docs/README.md)
 - **Issues**: Report issues in your fork
 - **Discussions**: Use your preferred communication channel

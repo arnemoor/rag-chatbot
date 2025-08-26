@@ -15,7 +15,7 @@ export default defineWorkersConfig({
             DEBUG_MODE: 'true',
             ALLOWED_ORIGINS: 'http://localhost:3000,http://localhost:8080',
             R2_BUCKET_NAME: 'test-bucket',
-            AUTORAG_INSTANCE_ID: 'test-instance',
+            AUTORAG_INSTANCE: 'test-instance',
             GATEWAY_NAME: 'test-gateway',
           },
           r2Buckets: {

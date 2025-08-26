@@ -1,12 +1,33 @@
 # AutoRAG API Reference
 
-<!-- Consolidated from 05_API_Reference.md -->
+## Quick Reference - All Endpoints
+
+### Chat Endpoints
+- `POST /` or `/chat` or `/api/chat` - Send chat message
+- `GET /health` - Health check
+
+### Configuration Endpoints
+- `GET /config` - Get full configuration
+- `GET /config/languages` - List available languages
+- `GET /config/categories` - List available categories
+- `GET /config/products?category={category}` - List products for category
+- `GET /config/providers` - List AI providers
+- `GET /config/models?provider={provider}` - List models for provider
+- `POST /config/refresh` - Refresh cached configuration
+
+### R2 Storage Endpoints (Admin)
+- `GET /r2/list` - List R2 bucket contents
+- `GET /r2/get/:key` - Download file from R2
+- `POST /r2/upload` - Upload file to R2 (multipart/form-data)
+- `DELETE /r2/delete/:key` - Delete file from R2
+- `POST /r2/folder` - Create folder in R2
 
 ## API Overview
 
-This PoC provides:
-1. **Worker Chat API** - High-level interface for chat interactions (what we built)
-2. **AutoRAG Direct API** - Low-level access to Cloudflare AutoRAG (underlying service)
+This system provides:
+1. **Worker Chat API** - High-level interface for chat interactions
+2. **Configuration API** - Dynamic configuration discovery
+3. **R2 Management API** - Document storage management
 
 ## Chat API (Primary Interface)
 
@@ -33,8 +54,6 @@ Send a chat message and receive an AI response with citations.
 {
   "query": "Your question here",
   "language": "en|de|fr|it",
-  "dignity": "librarian|researcher|administrator|general",
-  "product": "libraryonline|librarywin|knowledgehub|scholaraccess|general",
   "provider": "workers-ai|openai|anthropic",
   "model": "model-identifier",
   "sessionId": "optional-session-uuid"
@@ -46,8 +65,9 @@ Send a chat message and receive an AI response with citations.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `query` | string | Yes | User's question (max 2000 characters) |
-| `language` | string | Yes | Response language: `en`, `de`, `fr`, `it` |
-| `dignity` | string | Yes | User role for content filtering |
+| `language` | string | No | Response language: `en`, `de`, `fr`, `it` (default: `en`) |
+| `category` | string | No | Document category (default: `fiction`) |
+| `product` | string | No | Product within category (default: `novels`) |
 | `product` | string | Yes | Product documentation to search |
 | `provider` | string | Yes | AI provider selection |
 | `model` | string | Yes | Specific AI model identifier |
@@ -60,7 +80,8 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
   -d '{
     "query": "How do I configure database connection for LibraryOnline?",
     "language": "en",
-    "dignity": "administrator",
+    "category": "fiction",
+    "product": "novels",
     "product": "libraryonline",
     "provider": "openai",
     "model": "gpt-5-mini",
@@ -90,7 +111,8 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
     "model": "gpt-5-mini",
     "responseTime": 1847,
     "language": "en",
-    "dignity": "administrator",
+    "category": "fiction",
+    "product": "novels",
     "product": "libraryonline"
   }
 }
@@ -133,33 +155,33 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
 
 ### GET /health (Health Check)
 
-Check the status of all system components.
+Check the status of the API.
 
 #### Response Format
 ```json
 {
   "status": "healthy",
   "timestamp": "2024-12-20T10:30:00Z",
-  "components": {
-    "worker": {
-      "status": "healthy",
-      "responseTime": "45ms"
-    },
-    "autorag": {
-      "status": "healthy",
-      "indexingStatus": "completed",
-      "lastSync": "2024-12-20T09:30:00Z"
-    },
-    "aiGateway": {
-      "status": "healthy",
-      "providersAvailable": ["workers-ai", "openai", "anthropic"]
-    },
-    "r2Storage": {
-      "status": "healthy",
-      "documentCount": 1247
-    }
-  },
   "version": "1.0.0"
+}
+```
+
+#### Debug Mode Response (when DEBUG_MODE="true")
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-12-20T10:30:00Z",
+  "version": "1.0.0",
+  "debug": {
+    "environment": "development",
+    "config": {
+      "r2_bucket": "Configured",
+      "autorag_instance": "Configured",
+      "ai_gateway": "Configured",
+      "cors_mode": "Restricted",
+      "allowed_origins": ["http://localhost:3000"]
+    }
+  }
 }
 ```
 
@@ -346,7 +368,8 @@ class AutoRAGClient {
 const client = new AutoRAGClient({
   defaults: {
     language: 'en',
-    dignity: 'librarian',
+    category: 'fiction',
+    product: 'novels',
     product: 'libraryonline',
     provider: 'openai',
     model: 'gpt-5-mini'
@@ -401,7 +424,8 @@ class AutoRAGError(Exception):
 # Usage
 client = AutoRAGClient(defaults={
     'language': 'en',
-    'dignity': 'librarian',
+    'category': 'fiction',
+    'product': 'novels',
     'product': 'libraryonline',
     'provider': 'openai',
     'model': 'gpt-5-mini'
@@ -420,7 +444,8 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
   -d '{
     "query": "What are the system requirements for LibraryOnline?",
     "language": "en",
-    "dignity": "administrator",
+    "category": "fiction",
+    "product": "novels",
     "product": "libraryonline",
     "provider": "workers-ai",
     "model": "@cf/meta/llama-3.1-8b-instruct-fast"
@@ -434,7 +459,8 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
   -d '{
     "query": "Wie konfiguriere ich die Datenbankverbindung?",
     "language": "de",
-    "dignity": "administrator",
+    "category": "fiction",
+    "product": "novels",
     "product": "libraryonline",
     "provider": "openai",
     "model": "gpt-5-mini"
@@ -448,7 +474,8 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
   -d '{
     "query": "Explain the complete patron data migration process from Librarywin to KnowledgeHub",
     "language": "en",
-    "dignity": "administrator", 
+    "category": "fiction",
+    "product": "novels", 
     "product": "knowledgehub",
     "provider": "anthropic",
     "model": "claude-sonnet-4-20250514"
@@ -554,7 +581,8 @@ const queries = [
 
 const results = await processBatchQueries(queries, {
   language: 'en',
-  dignity: 'administrator',
+  category: 'fiction',
+  product: 'novels',
   product: 'general',
   provider: 'workers-ai',
   model: '@cf/meta/llama-3.1-8b-instruct-fast'
@@ -696,7 +724,7 @@ const searchResults = await env.AI.autorag(env.AUTORAG_INSTANCE).search({
   filters: {
     type: "eq",
     key: "folder",
-    value: "product/dignity/language/"
+    value: "category/product/language/"
   },
   max_num_results: 5
 });

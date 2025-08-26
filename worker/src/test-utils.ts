@@ -11,7 +11,7 @@ export function createMockEnv(overrides?: Partial<Env>): Env {
     DEBUG_MODE: 'true',
     ALLOWED_ORIGINS: 'http://localhost:3000',
     R2_BUCKET_NAME: 'test-bucket',
-    AUTORAG_INSTANCE_ID: 'test-instance',
+    AUTORAG_INSTANCE: 'test-instance',
     AI: {
       run: vi.fn().mockResolvedValue({
         response: 'Mock AI response for testing',

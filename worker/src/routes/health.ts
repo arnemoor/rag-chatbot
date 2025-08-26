@@ -40,7 +40,7 @@ export function handleHealth(env: Env, corsHeaders: CorsHeaders): Response {
       environment: env.ENVIRONMENT || 'development',
       config: {
         r2_bucket: env.R2_BUCKET ? 'Configured' : 'Not configured',
-        autorag_instance: env.AUTORAG_INSTANCE_ID ? 'Configured' : 'Not configured',
+        autorag_instance: env.AUTORAG_INSTANCE ? 'Configured' : 'Not configured',
         ai_gateway: env.GATEWAY_NAME ? 'Configured' : 'Not configured',
         cors_mode: allowedOrigins ? 'Restricted' : 'Open (wildcard)',
         allowed_origins: allowedOrigins || ['*'],
