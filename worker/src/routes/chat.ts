@@ -21,92 +21,52 @@ const anthropicBreaker = new CircuitBreaker(3, 30000, 2); // 3 failures, 30 seco
  * @returns Filter object for AutoRAG
  */
 async function buildCategoryFilter(env: Env, category: string, product: string, language: string) {
-  if (category === 'general') {
-    // Search across all categories and their products
-    try {
-      const categories = await getCategories(env);
-      const filters = [];
-      
-      for (const cat of categories) {
-        if (cat.available && cat.id !== 'general' && cat.products) {
-          for (const prod of cat.products) {
-            if (prod.available) {
-              filters.push({
-                type: 'eq' as const,
-                key: 'folder',
-                value: `${cat.id}/${prod.id}/${language}/`,
-              });
-            }
-          }
-        }
-      }
-      
-      // If no filters were built, use fallback
-      if (filters.length === 0) {
-        return {
-          type: 'or' as const,
-          filters: [
-            { type: 'eq' as const, key: 'folder', value: `fiction/novels/${language}/` },
-            { type: 'eq' as const, key: 'folder', value: `non-fiction/self-help/${language}/` },
-            { type: 'eq' as const, key: 'folder', value: `science/research/${language}/` },
-            { type: 'eq' as const, key: 'folder', value: `technology/programming/${language}/` },
-            { type: 'eq' as const, key: 'folder', value: `reference/catalog/${language}/` },
-          ],
-        };
-      }
-      
-      return { type: 'or' as const, filters };
-    } catch (error) {
-      console.error('Failed to load categories for filter:', error);
-      // Fallback to hardcoded categories if dynamic loading fails
-      return {
-        type: 'or' as const,
-        filters: [
-          { type: 'eq' as const, key: 'folder', value: `fiction/novels/${language}/` },
-          { type: 'eq' as const, key: 'folder', value: `non-fiction/self-help/${language}/` },
-          { type: 'eq' as const, key: 'folder', value: `science/research/${language}/` },
-          { type: 'eq' as const, key: 'folder', value: `technology/programming/${language}/` },
-          { type: 'eq' as const, key: 'folder', value: `reference/catalog/${language}/` },
-        ],
-      };
-    }
-  } else if (product === 'all' || !product) {
-    // Search all products within a specific category
+  // Category is required - no defaults
+  if (!category) {
+    throw new Error('Category is required. Available categories can be found at /config/categories');
+  }
+  
+  // If product not specified, search all products in the category
+  if (!product) {
     try {
       const categories = await getCategories(env);
       const cat = categories.find(c => c.id === category);
       
-      if (cat && cat.products && cat.products.length > 0) {
-        const filters = cat.products
-          .filter(p => p.available)
-          .map(p => ({
-            type: 'eq' as const,
-            key: 'folder',
-            value: `${category}/${p.id}/${language}/`,
-          }));
-        
-        return filters.length > 1 
-          ? { type: 'or' as const, filters }
-          : filters[0];
+      if (!cat) {
+        throw new Error(`Category not found: ${category}. Available categories can be found at /config/categories`);
       }
+      
+      if (!cat.products || cat.products.length === 0) {
+        throw new Error(`No products found for category: ${category}. Please upload documents to ${category}/<product>/${language}/`);
+      }
+      
+      const filters = cat.products
+        .filter(p => p.available)
+        .map(p => ({
+          type: 'eq' as const,
+          key: 'folder',
+          value: `${category}/${p.id}/${language}/`,
+        }));
+      
+      if (filters.length === 0) {
+        throw new Error(`No available products in category: ${category}`);
+      }
+      
+      return filters.length > 1 
+        ? { type: 'or' as const, filters }
+        : filters[0];
     } catch (error) {
-      console.error('Failed to load products for category:', error);
+      console.error('Failed to build category filter:', error);
+      throw error;
     }
-    
-    // Fallback to specific product if available
-    return {
-      type: 'eq' as const,
-      key: 'folder',
-      value: `${category}/${product || 'default'}/${language}/`,
-    };
-  } else {
-    // Search only in the selected category/product folder
-    return {
-      type: 'eq' as const,
-      key: 'folder',
-      value: `${category}/${product}/${language}/`,
-    };
   }
+  
+  // Specific product requested - use exact path
+  return {
+    type: 'eq' as const,
+    key: 'folder',
+    value: `${category}/${product}/${language}/`,
+  };
 }
 
 /**
@@ -375,12 +335,37 @@ export async function handleChat(
     // Sanitize query input
     chatRequest.query = sanitizeInput(chatRequest.query);
 
-    // Set defaults
+    // Set defaults for language, provider and model only
     const language = chatRequest.language || 'en';
-    const category = chatRequest.category || 'fiction';
-    const product = chatRequest.product || 'novels';
     const provider = chatRequest.provider || 'workers-ai';
     const model = chatRequest.model || '@cf/meta/llama-3.2-3b-instruct';
+    
+    // Category and product must come from request or config - no hardcoded defaults
+    const category = chatRequest.category || '';
+    const product = chatRequest.product || '';
+    
+    // Check if category is provided
+    if (!category) {
+      const categories = await getCategories(env);
+      const availableCategories = categories.map(c => c.id).join(', ');
+      
+      return new Response(
+        JSON.stringify({
+          error: 'Category required',
+          message: availableCategories 
+            ? `Please specify a category. Available: ${availableCategories}`
+            : 'No categories configured. Please upload documents to R2 bucket.',
+          availableCategories: categories.map(c => ({ id: c.id, name: c.name })),
+        }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        },
+      );
+    }
 
     // Check if model is available (handle future models)
     if (!isModelAvailable(model)) {
@@ -415,7 +400,24 @@ export async function handleChat(
     const systemPrompt = buildSystemPrompt({ language, category, product });
 
     // Create filter to search in the correct folder structure: {category}/{product}/{language}/
-    const filter = await buildCategoryFilter(env, category, product, language);
+    let filter;
+    try {
+      filter = await buildCategoryFilter(env, category, product, language);
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: 'Configuration error',
+          message: error instanceof Error ? error.message : 'Failed to build category filter',
+        }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        },
+      );
+    }
 
     let responseText: string;
     let citations: Citation[] = [];

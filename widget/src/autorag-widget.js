@@ -29,8 +29,8 @@ class AutoRAGWidget extends HTMLElement {
     this.config = {
       apiUrl: '', // Will be loaded dynamically
       language: 'en',
-      category: 'general',
-      product: 'library',
+      category: '', // No default - must be selected from R2
+      product: '', // No default - must be selected from R2
       provider: 'workers-ai',
       model: '@cf/meta/llama-3.2-3b-instruct',
       position: 'bottom-right',

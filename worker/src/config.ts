@@ -66,91 +66,22 @@ export interface AppConfiguration {
   };
 }
 
-// Default configuration (fallback when dynamic loading fails)
-const DEFAULT_LANGUAGES: Language[] = [
-  { code: 'en', name: 'English', nativeName: 'English', available: true },
-  { code: 'de', name: 'German', nativeName: 'Deutsch', available: true },
-  { code: 'fr', name: 'French', nativeName: 'Français', available: true },
-  { code: 'it', name: 'Italian', nativeName: 'Italiano', available: true },
-];
+// Language metadata for discovered language codes
+const LANGUAGE_METADATA: Record<string, { name: string; nativeName: string }> = {
+  'en': { name: 'English', nativeName: 'English' },
+  'de': { name: 'German', nativeName: 'Deutsch' },
+  'fr': { name: 'French', nativeName: 'Français' },
+  'it': { name: 'Italian', nativeName: 'Italiano' },
+  'es': { name: 'Spanish', nativeName: 'Español' },
+  'pt': { name: 'Portuguese', nativeName: 'Português' },
+  'zh': { name: 'Chinese', nativeName: '中文' },
+  'ja': { name: 'Japanese', nativeName: '日本語' },
+  'ko': { name: 'Korean', nativeName: '한국어' },
+  'ru': { name: 'Russian', nativeName: 'Русский' },
+  'ar': { name: 'Arabic', nativeName: 'العربية' },
+  'hi': { name: 'Hindi', nativeName: 'हिन्दी' },
+};
 
-const DEFAULT_CATEGORIES: Category[] = [
-  {
-    id: 'general',
-    name: 'General',
-    description: 'All categories combined',
-    available: true,
-  },
-  {
-    id: 'fiction',
-    name: 'Fiction',
-    description: 'Fiction books and literature',
-    available: true,
-  },
-  {
-    id: 'non-fiction',
-    name: 'Non-Fiction',
-    description: 'Non-fiction books and resources',
-    available: true,
-  },
-  {
-    id: 'science',
-    name: 'Science',
-    description: 'Scientific literature and research',
-    available: true,
-  },
-  {
-    id: 'technology',
-    name: 'Technology',
-    description: 'Technology and programming resources',
-    available: true,
-  },
-  {
-    id: 'reference',
-    name: 'Reference',
-    description: 'Reference materials and documentation',
-    available: true,
-  },
-];
-
-// Helper function to get default products for a category
-function getDefaultProductsForCategory(category: Category): Product[] {
-  switch (category.id) {
-    case 'fiction':
-      return [
-        { id: 'novels', name: 'Novels', description: 'Fiction novels', categoryId: 'fiction', available: true },
-        { id: 'short-stories', name: 'Short Stories', description: 'Short story collections', categoryId: 'fiction', available: true },
-      ];
-    case 'non-fiction':
-      return [
-        { id: 'self-help', name: 'Self Help', description: 'Self improvement books', categoryId: 'non-fiction', available: true },
-        { id: 'biography', name: 'Biography', description: 'Biographical works', categoryId: 'non-fiction', available: true },
-      ];
-    case 'science':
-      return [
-        { id: 'research', name: 'Research', description: 'Scientific research', categoryId: 'science', available: true },
-        { id: 'physics', name: 'Physics', description: 'Physics texts', categoryId: 'science', available: true },
-      ];
-    case 'technology':
-      return [
-        { id: 'programming', name: 'Programming', description: 'Programming guides', categoryId: 'technology', available: true },
-        { id: 'ai-ml', name: 'AI/ML', description: 'Artificial Intelligence and Machine Learning', categoryId: 'technology', available: true },
-      ];
-    case 'reference':
-      return [
-        { id: 'catalog', name: 'Catalog', description: 'Reference catalogs', categoryId: 'reference', available: true },
-        { id: 'encyclopedias', name: 'Encyclopedias', description: 'Encyclopedia entries', categoryId: 'reference', available: true },
-      ];
-    default:
-      return [{
-        id: 'default',
-        name: 'Default Collection',
-        description: `Default collection for ${category.name}`,
-        categoryId: category.id,
-        available: true,
-      }];
-  }
-}
 
 const DEFAULT_PROVIDERS: Provider[] = [
   {
@@ -215,20 +146,15 @@ export async function loadConfiguration(env: Env): Promise<AppConfiguration> {
     console.error('Failed to load configuration from R2:', error);
   }
 
-  // Fallback: Build configuration from defaults and actual R2 structure
+  // Build configuration from R2 structure discovery only
   const config = await buildDynamicConfiguration(env);
 
   // Cache the configuration
   configCache = config;
   cacheTimestamp = Date.now();
 
-  // Optionally save to R2 for future use
-  try {
-    await saveConfiguration(env, config);
-  } catch (error) {
-    console.error('Failed to save configuration to R2:', error);
-  }
-
+  // DO NOT auto-save discovered config - let users manage _config/app-config.json manually
+  
   return config;
 }
 
@@ -238,9 +164,9 @@ export async function loadConfiguration(env: Env): Promise<AppConfiguration> {
 async function buildDynamicConfiguration(env: Env): Promise<AppConfiguration> {
   const r2ops = new R2Operations(env);
 
-  // Discover categories from R2 structure
-  let categories = [...DEFAULT_CATEGORIES];
-  let languages = [...DEFAULT_LANGUAGES];
+  // Discover categories from R2 structure - NO DEFAULTS
+  let categories: Category[] = [];
+  let languages: Language[] = [];
 
   try {
     // List top-level folders to discover categories
@@ -291,45 +217,33 @@ async function buildDynamicConfiguration(env: Env): Promise<AppConfiguration> {
         }
       }
 
-      // Update categories and products based on discovery
+      // Build categories from discovered structure only
       if (discoveredCategories.size > 0) {
-        const existingIds = new Set(categories.map((c) => c.id));
-
-        // Process discovered categories and their products
         for (const [catId, productSet] of discoveredCategories) {
-          let category = categories.find(c => c.id === catId);
-          
-          if (!category) {
-            // Add new category if not in defaults
-            category = {
-              id: catId,
-              name: catId.charAt(0).toUpperCase() + catId.slice(1).replace('-', ' '),
-              description: `${catId} resources`,
-              available: true,
-              products: [],
-            };
-            categories.push(category);
-          }
-          
-          // Add products to category
-          category.products = Array.from(productSet).map((prodId: string) => ({
-            id: prodId,
-            name: prodId.charAt(0).toUpperCase() + prodId.slice(1).replace('-', ' '),
-            description: `${prodId} collection`,
-            categoryId: catId,
+          const category: Category = {
+            id: catId,
+            name: catId.charAt(0).toUpperCase() + catId.slice(1).replace(/-/g, ' '),
+            description: `${catId} documents`,
             available: true,
-          }));
+            products: Array.from(productSet).map((prodId: string) => ({
+              id: prodId,
+              name: prodId.charAt(0).toUpperCase() + prodId.slice(1).replace(/-/g, ' '),
+              description: `${prodId} collection`,
+              categoryId: catId,
+              available: true,
+            })),
+          };
+          categories.push(category);
         }
       }
 
-      // Update languages if we found any
+      // Build languages list from discovered languages only
       if (discoveredLanguages.size > 0) {
-        const existingCodes = new Set(languages.map((l) => l.code));
-
-        // Mark existing languages as available/unavailable based on discovery
-        languages = languages.map((lang) => ({
-          ...lang,
-          available: discoveredLanguages.has(lang.code),
+        languages = Array.from(discoveredLanguages).map(code => ({
+          code,
+          name: LANGUAGE_METADATA[code]?.name || code.toUpperCase(),
+          nativeName: LANGUAGE_METADATA[code]?.nativeName || code.toUpperCase(),
+          available: true,
         }));
       }
     }
@@ -337,13 +251,7 @@ async function buildDynamicConfiguration(env: Env): Promise<AppConfiguration> {
     console.error('Failed to discover categories from R2:', error);
   }
 
-  // Ensure all categories have products (add defaults if needed)
-  for (const category of categories) {
-    if (category.id !== 'general' && (!category.products || category.products.length === 0)) {
-      // Add default products based on category
-      category.products = getDefaultProductsForCategory(category);
-    }
-  }
+  // Do NOT add default products - only use what's discovered from R2
 
   return {
     languages,
@@ -352,8 +260,8 @@ async function buildDynamicConfiguration(env: Env): Promise<AppConfiguration> {
     models: MODELS,
     defaultSettings: {
       language: 'en',
-      category: 'general',
-      product: 'library',
+      category: '', // No default - must come from R2
+      product: '', // No default - must come from R2
       provider: 'workers-ai',
       model: '@cf/meta/llama-3.2-3b-instruct',
     },
