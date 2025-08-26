@@ -604,12 +604,9 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
       </div>
     </div>
 
-    <script type="module">
-      // Import configuration service
-      import { getConfigService } from './config-service.js';
-
-      // Configuration service instance
-      let configService = null;
+    <script>
+      // API URL and configuration
+      let apiUrl = null;
       let dynamicConfig = null;
 
       // Cached data from API
@@ -673,10 +670,7 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
           apiUrl = window.location.origin;
         }
 
-        // Initialize configuration service
-        configService = getConfigService(apiUrl);
-
-        // Load dynamic configuration
+        // Load dynamic configuration directly from API
         await loadDynamicConfiguration();
 
         // Update UI with loaded configuration
@@ -705,18 +699,37 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
       async function loadDynamicConfiguration() {
         try {
           // Load full configuration
-          dynamicConfig = await configService.getConfiguration();
+          const configResponse = await fetch(`${apiUrl}/config`);
+          if (configResponse.ok) {
+            dynamicConfig = await configResponse.json();
+          }
 
           // Load specific configuration sections
-          availableLanguages = await configService.getLanguages();
-          availableCategories = await configService.getCategories();
-          availableProviders = await configService.getProviders();
-          availableModels = await configService.getModels();
+          const langResponse = await fetch(`${apiUrl}/config/languages`);
+          if (langResponse.ok) {
+            availableLanguages = await langResponse.json();
+          }
+
+          const catResponse = await fetch(`${apiUrl}/config/categories`);
+          if (catResponse.ok) {
+            availableCategories = await catResponse.json();
+          }
+
+          const provResponse = await fetch(`${apiUrl}/config/providers`);
+          if (provResponse.ok) {
+            availableProviders = await provResponse.json();
+          }
+
+          const modelResponse = await fetch(`${apiUrl}/config/models`);
+          if (modelResponse.ok) {
+            availableModels = await modelResponse.json();
+          }
 
           // Build products mapping
           for (const category of availableCategories) {
-            if (category.id !== 'general') {
-              const products = await configService.getProducts(category.id);
+            const prodResponse = await fetch(`${apiUrl}/config/products?category=${category.id}`);
+            if (prodResponse.ok) {
+              const products = await prodResponse.json();
               productsByCategory[category.id] = products.map((p) => p.id);
             }
           }
@@ -724,27 +737,10 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
           console.log('Dynamic configuration loaded successfully');
         } catch (error) {
           console.error('Failed to load dynamic configuration:', error);
-          // Use fallback configuration
-          availableLanguages = [
-            { code: 'en', name: 'English', available: true },
-            { code: 'de', name: 'German', available: true },
-            { code: 'fr', name: 'French', available: true },
-            { code: 'it', name: 'Italian', available: true },
-          ];
-          availableCategories = [
-            { id: 'fiction', name: 'Fiction', available: true },
-            { id: 'non-fiction', name: 'Non-Fiction', available: true },
-            { id: 'science', name: 'Science', available: true },
-            { id: 'technology', name: 'Technology', available: true },
-            { id: 'reference', name: 'Reference', available: true },
-          ];
-          productsByCategory = {
-            fiction: ['classic-literature'],
-            'non-fiction': ['personal-development'],
-            science: ['research-methods'],
-            technology: ['programming-languages'],
-            reference: ['library-catalog'],
-          };
+          // No fallback - use empty arrays
+          availableLanguages = [];
+          availableCategories = [];
+          productsByCategory = {};
         }
       }
 
