@@ -91,7 +91,7 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # Check if wrangler is available
-if ! command -v wrangler &> /dev/null && ! npx wrangler --version &> /dev/null; then
+if ! command -v wrangler &> /dev/null && ! npx --yes wrangler --version &> /dev/null; then
     print_error "wrangler CLI not found. Please run ./scripts/install-dependencies.sh first"
     exit 1
 fi
@@ -113,7 +113,7 @@ fi
 
 # Deploy worker
 print_info "Running wrangler deploy (this may take a moment)..."
-WORKER_OUTPUT=$(npx wrangler deploy 2>&1) || {
+WORKER_OUTPUT=$(npx --yes wrangler deploy 2>&1) || {
     print_error "Worker deployment failed:"
     echo "$WORKER_OUTPUT"
     exit 1
@@ -217,12 +217,12 @@ print_step "Deploying widget to Cloudflare Pages..."
 
 # Check if Pages project exists, create if not
 print_info "Checking for Pages project: $PAGES_PROJECT"
-PAGES_CHECK=$(npx wrangler pages project list 2>&1)
+PAGES_CHECK=$(npx --yes wrangler pages project list 2>&1)
 if echo "$PAGES_CHECK" | grep -qE "(^|\s)$PAGES_PROJECT(\s|$)"; then
     print_info "Using existing Pages project: $PAGES_PROJECT"
 else
     print_info "Creating new Pages project: $PAGES_PROJECT"
-    CREATE_OUTPUT=$(npx wrangler pages project create "$PAGES_PROJECT" --production-branch=main 2>&1)
+    CREATE_OUTPUT=$(npx --yes wrangler pages project create "$PAGES_PROJECT" --production-branch=main 2>&1)
     CREATE_EXIT_CODE=$?
     
     if [ $CREATE_EXIT_CODE -eq 0 ]; then
@@ -237,7 +237,8 @@ else
 fi
 
 # Deploy to Pages
-PAGES_OUTPUT=$(npx wrangler pages deploy dist --project-name="$PAGES_PROJECT" --commit-dirty=true 2>&1)
+print_info "Deploying to Cloudflare Pages (this may take a moment)..."
+PAGES_OUTPUT=$(npx --yes wrangler pages deploy dist --project-name="$PAGES_PROJECT" --commit-dirty=true 2>&1)
 
 # Extract Widget URL (try alias first, then deployment URL)
 WIDGET_URL=$(echo "$PAGES_OUTPUT" | grep -oE 'https://[a-zA-Z0-9.-]+\.pages\.dev' | grep -v '^https://[a-f0-9]' | head -1)
@@ -308,7 +309,7 @@ fi
 print_info "Rebuilding widget with final configuration..."
 npm run build
 cp ../deployment-config.json dist/
-npx wrangler pages deploy dist --project-name="$PAGES_PROJECT" --commit-dirty=true >/dev/null 2>&1
+npx --yes wrangler pages deploy dist --project-name="$PAGES_PROJECT" --commit-dirty=true >/dev/null 2>&1
 
 print_success "Configuration updated"
 
