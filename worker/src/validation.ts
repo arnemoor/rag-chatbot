@@ -23,38 +23,6 @@ let validationCache: {
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// Helper to get default products for a category
-function getDefaultProductsForCategory(categoryId: string): string[] {
-  switch (categoryId) {
-    case 'fiction':
-      return ['novels', 'short-stories'];
-    case 'non-fiction':
-      return ['self-help', 'biography'];
-    case 'science':
-      return ['research', 'physics'];
-    case 'technology':
-      return ['programming', 'ai-ml'];
-    case 'reference':
-      return ['catalog', 'encyclopedias'];
-    default:
-      return ['default'];
-  }
-}
-
-// Fallback validation data
-function getFallbackValidationData() {
-  return {
-    categories: ['fiction', 'non-fiction', 'science', 'technology', 'reference', 'general'],
-    productsByCategory: new Map([
-      ['fiction', ['novels', 'short-stories']],
-      ['non-fiction', ['self-help', 'biography']],
-      ['science', ['research', 'physics']],
-      ['technology', ['programming', 'ai-ml']],
-      ['reference', ['catalog', 'encyclopedias']],
-    ]),
-    timestamp: Date.now(),
-  };
-}
 
 // Helper function to get valid categories and products dynamically
 async function getValidationData(env: Env) {
@@ -66,9 +34,14 @@ async function getValidationData(env: Env) {
   try {
     const categories = await getCategories(env);
     
-    // If no categories or only defaults, use fallback
+    // No fallback - if no categories found, return empty
     if (!categories || categories.length === 0) {
-      return getFallbackValidationData();
+      validationCache = {
+        categories: [],
+        productsByCategory: new Map(),
+        timestamp: Date.now(),
+      };
+      return validationCache;
     }
     
     const categoryIds = categories.map(c => c.id);
@@ -80,13 +53,8 @@ async function getValidationData(env: Env) {
           category.id,
           category.products.map(p => p.id)
         );
-      } else if (category.id !== 'general') {
-        // For categories without products discovered, use defaults
-        const defaultProducts = getDefaultProductsForCategory(category.id);
-        if (defaultProducts.length > 0) {
-          productsByCategory.set(category.id, defaultProducts);
-        }
       }
+      // No defaults added for categories without products
     }
 
     validationCache = {
@@ -98,7 +66,12 @@ async function getValidationData(env: Env) {
     return validationCache;
   } catch (error) {
     console.error('Failed to load validation data:', error);
-    return getFallbackValidationData();
+    // Return empty validation data on error
+    return {
+      categories: [],
+      productsByCategory: new Map(),
+      timestamp: Date.now(),
+    };
   }
 }
 
@@ -146,8 +119,13 @@ export async function validateChatRequest(request: ChatRequest, env?: Env): Prom
   if (env && (request.category || request.product)) {
     const validationData = await getValidationData(env);
     
-    // Validate category
-    if (request.category && !validationData.categories.includes(request.category)) {
+    // Check if any categories are configured
+    if (validationData.categories.length === 0) {
+      errors.push({
+        field: 'configuration',
+        message: 'No categories configured. Please upload documents to R2 bucket or add _config/app-config.json',
+      });
+    } else if (request.category && !validationData.categories.includes(request.category)) {
       errors.push({
         field: 'category',
         message: `Category must be one of: ${validationData.categories.join(', ')}`,
@@ -165,14 +143,8 @@ export async function validateChatRequest(request: ChatRequest, env?: Env): Prom
       }
     }
   } else if (!env) {
-    // Fallback validation without env (basic checks only)
-    const fallbackCategories = ['fiction', 'non-fiction', 'science', 'technology', 'reference', 'general'];
-    if (request.category && !fallbackCategories.includes(request.category)) {
-      errors.push({
-        field: 'category',
-        message: `Category must be one of: ${fallbackCategories.join(', ')}`,
-      });
-    }
+    // No env available - can't validate categories/products
+    // Just skip validation for these fields
   }
 
   // Validate provider (optional)

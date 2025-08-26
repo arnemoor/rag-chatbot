@@ -66,13 +66,8 @@ export class ConfigurationService {
       return languages;
     } catch (error) {
       console.error('Failed to fetch languages:', error);
-      // Return default languages as fallback
-      return [
-        { code: 'en', name: 'English', nativeName: 'English', available: true },
-        { code: 'de', name: 'German', nativeName: 'Deutsch', available: true },
-        { code: 'fr', name: 'French', nativeName: 'Français', available: true },
-        { code: 'it', name: 'Italian', nativeName: 'Italiano', available: true },
-      ];
+      // Return empty array - no defaults
+      return [];
     }
   }
 
@@ -101,15 +96,8 @@ export class ConfigurationService {
       return categories;
     } catch (error) {
       console.error('Failed to fetch categories:', error);
-      // Return default categories as fallback
-      return [
-        { id: 'general', name: 'General', available: true },
-        { id: 'fiction', name: 'Fiction', available: true },
-        { id: 'non-fiction', name: 'Non-Fiction', available: true },
-        { id: 'science', name: 'Science', available: true },
-        { id: 'technology', name: 'Technology', available: true },
-        { id: 'reference', name: 'Reference', available: true },
-      ];
+      // Return empty array - no defaults
+      return [];
     }
   }
 
@@ -245,15 +233,8 @@ export class ConfigurationService {
       return products;
     } catch (error) {
       console.error('Failed to fetch products:', error);
-      // Return default product as fallback
-      return [
-        {
-          id: `${categoryId}-default`,
-          name: 'Default Collection',
-          categoryId,
-          available: true,
-        },
-      ];
+      // Return empty array - no defaults
+      return [];
     }
   }
 
@@ -322,21 +303,10 @@ export class ConfigurationService {
       return this.defaultConfig;
     }
 
+    // No hardcoded defaults for categories and products
     return {
-      languages: [
-        { code: 'en', name: 'English', nativeName: 'English', available: true },
-        { code: 'de', name: 'German', nativeName: 'Deutsch', available: true },
-        { code: 'fr', name: 'French', nativeName: 'Français', available: true },
-        { code: 'it', name: 'Italian', nativeName: 'Italiano', available: true },
-      ],
-      categories: [
-        { id: 'general', name: 'General', available: true },
-        { id: 'fiction', name: 'Fiction', available: true },
-        { id: 'non-fiction', name: 'Non-Fiction', available: true },
-        { id: 'science', name: 'Science', available: true },
-        { id: 'technology', name: 'Technology', available: true },
-        { id: 'reference', name: 'Reference', available: true },
-      ],
+      languages: [], // Empty - will be discovered from R2
+      categories: [], // Empty - must come from R2
       providers: [
         {
           id: 'workers-ai',
@@ -355,8 +325,8 @@ export class ConfigurationService {
       },
       defaultSettings: {
         language: 'en',
-        category: 'general',
-        product: 'library',
+        category: '', // No default - must be selected
+        product: '', // No default - must be selected
         provider: 'workers-ai',
         model: '@cf/meta/llama-3.2-3b-instruct',
       },
