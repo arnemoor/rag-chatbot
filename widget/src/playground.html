@@ -789,17 +789,20 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         productSelect.innerHTML = '';
 
         // Try to get products from API first
-        if (configService && category) {
+        if (category && apiUrl) {
           try {
-            const products = await configService.getProducts(category);
-            products.forEach((product) => {
-              const option = document.createElement('option');
-              option.value = product.id;
-              option.textContent =
-                product.name || product.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-              productSelect.appendChild(option);
-            });
-            return;
+            const response = await fetch(`${apiUrl}/config/products?category=${category}`);
+            if (response.ok) {
+              const products = await response.json();
+              products.forEach((product) => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent =
+                  product.name || product.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+                productSelect.appendChild(option);
+              });
+              return;
+            }
           } catch (error) {
             console.error('Failed to load products dynamically:', error);
           }
@@ -823,24 +826,27 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         modelSelect.innerHTML = '';
 
         // Try to get models from API first
-        if (configService && providerId) {
+        if (providerId && apiUrl) {
           try {
-            const models = await configService.getModels(providerId);
-
-            // Find the provider to get its model list
-            const provider = availableProviders.find((p) => p.id === providerId);
-            if (provider && provider.models) {
-              provider.models.forEach((modelId) => {
-                const modelConfig = models[modelId] || availableModels[modelId];
-                if (modelConfig && modelConfig.available) {
-                  const option = document.createElement('option');
-                  option.value = modelId;
-                  option.textContent = modelConfig.displayName || modelId;
-                  modelSelect.appendChild(option);
-                }
-              });
+            const response = await fetch(`${apiUrl}/config/models`);
+            if (response.ok) {
+              const models = await response.json();
+              
+              // Find the provider to get its model list
+              const provider = availableProviders.find((p) => p.id === providerId);
+              if (provider && provider.models) {
+                provider.models.forEach((modelId) => {
+                  const modelConfig = models[modelId] || availableModels[modelId];
+                  if (modelConfig && modelConfig.available) {
+                    const option = document.createElement('option');
+                    option.value = modelId;
+                    option.textContent = modelConfig.displayName || modelId;
+                    modelSelect.appendChild(option);
+                  }
+                });
+              }
+              return;
             }
-            return;
           } catch (error) {
             console.error('Failed to load models dynamically:', error);
           }

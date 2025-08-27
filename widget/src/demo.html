@@ -210,6 +210,20 @@
         </div>
 
         <div class="control-group">
+          <label for="provider">Provider</label>
+          <select id="provider" onchange="updateModels()">
+            <!-- Will be populated dynamically -->
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="model">Model</label>
+          <select id="model">
+            <!-- Will be populated dynamically -->
+          </select>
+        </div>
+
+        <div class="control-group">
           <label for="theme">Theme</label>
           <select id="theme">
             <option value="light">Light</option>
@@ -247,6 +261,8 @@
       let apiUrl = null;
       let categories = [];
       let productsByCategory = {};
+      let providers = [];
+      let modelsByProvider = {};
 
       // Initialize on page load
       window.addEventListener('DOMContentLoaded', async () => {
@@ -319,6 +335,30 @@
         } catch (error) {
           console.error('Failed to load configuration:', error);
         }
+        
+        // Load providers and models
+        try {
+          const provResponse = await fetch(`${apiUrl}/config/providers`);
+          if (provResponse.ok) {
+            providers = await provResponse.json();
+            const providerSelect = document.getElementById('provider');
+            providerSelect.innerHTML = '';
+            
+            for (const prov of providers) {
+              const option = document.createElement('option');
+              option.value = prov.id;
+              option.textContent = prov.name;
+              providerSelect.appendChild(option);
+            }
+            
+            // Load models for first provider
+            if (providers.length > 0) {
+              await updateModels();
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load providers:', error);
+        }
       }
 
       function updateProducts() {
@@ -332,6 +372,42 @@
           option.value = prod.id;
           option.textContent = prod.name;
           productSelect.appendChild(option);
+        }
+      }
+
+      async function updateModels() {
+        const providerId = document.getElementById('provider').value;
+        const modelSelect = document.getElementById('model');
+        modelSelect.innerHTML = '';
+        
+        try {
+          // Get all models from API
+          const modelsResponse = await fetch(`${apiUrl}/config/models`);
+          if (modelsResponse.ok) {
+            const allModels = await modelsResponse.json();
+            
+            // Find the selected provider
+            const provider = providers.find(p => p.id === providerId);
+            if (provider && provider.models) {
+              // Add models for this provider
+              for (const modelId of provider.models) {
+                const modelInfo = allModels[modelId];
+                if (modelInfo && modelInfo.available) {
+                  const option = document.createElement('option');
+                  option.value = modelId;
+                  option.textContent = modelInfo.displayName || modelId;
+                  modelSelect.appendChild(option);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load models:', error);
+          // Add a default model as fallback
+          const option = document.createElement('option');
+          option.value = '@cf/meta/llama-3.2-3b-instruct';
+          option.textContent = 'Llama 3.2 3B Instruct';
+          modelSelect.appendChild(option);
         }
       }
 
@@ -350,6 +426,8 @@
         const language = document.getElementById('language').value;
         const category = document.getElementById('category').value;
         const product = document.getElementById('product').value;
+        const provider = document.getElementById('provider').value;
+        const model = document.getElementById('model').value;
         const theme = document.getElementById('theme').value;
         const position = document.getElementById('position').value;
 
@@ -358,6 +436,8 @@
         currentWidget.setAttribute('language', language);
         currentWidget.setAttribute('category', category);
         currentWidget.setAttribute('product', product);
+        currentWidget.setAttribute('provider', provider);
+        currentWidget.setAttribute('model', model);
         currentWidget.setAttribute('theme', theme);
         currentWidget.setAttribute('position', position);
 
@@ -374,6 +454,8 @@
         const language = document.getElementById('language').value;
         const category = document.getElementById('category').value;
         const product = document.getElementById('product').value;
+        const provider = document.getElementById('provider').value;
+        const model = document.getElementById('model').value;
         const theme = document.getElementById('theme').value;
         const position = document.getElementById('position').value;
 
@@ -385,6 +467,8 @@
   <span class="attr">language</span>=<span class="value">"${language}"</span>
   <span class="attr">category</span>=<span class="value">"${category}"</span>
   <span class="attr">product</span>=<span class="value">"${product}"</span>
+  <span class="attr">provider</span>=<span class="value">"${provider}"</span>
+  <span class="attr">model</span>=<span class="value">"${model}"</span>
   <span class="attr">theme</span>=<span class="value">"${theme}"</span>
   <span class="attr">position</span>=<span class="value">"${position}"</span><span class="tag">&gt;</span>
 <span class="tag">&lt;/autorag-widget&gt;</span>`;
