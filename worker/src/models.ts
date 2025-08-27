@@ -12,19 +12,40 @@ export interface ModelConfig {
 
 export const MODELS: Record<string, ModelConfig> = {
   // Workers AI Models (Available)
-  '@cf/meta/llama-3.2-3b-instruct': {
+  '@cf/meta/llama-3.3-70b-instruct-fp8-fast': {
     provider: 'workers-ai',
-    apiName: '@cf/meta/llama-3.2-3b-instruct',
-    displayName: 'Llama 3.2 3B',
+    apiName: '@cf/meta/llama-3.3-70b-instruct-fp8-fast',
+    displayName: 'Llama 3.3 70B Instruct (Fast)',
     available: true,
-    capabilities: ['text-generation', 'multilingual'],
+    capabilities: ['text-generation', 'multilingual', 'fast'],
   },
   '@cf/meta/llama-3.1-8b-instruct-fast': {
     provider: 'workers-ai',
     apiName: '@cf/meta/llama-3.1-8b-instruct-fast',
-    displayName: 'Llama 3.1 8B Fast',
+    displayName: 'Llama 3.1 8B Instruct (Fast)',
     available: true,
     capabilities: ['text-generation', 'multilingual', 'fast'],
+  },
+  '@cf/meta/llama-3.1-8b-instruct-fp8': {
+    provider: 'workers-ai',
+    apiName: '@cf/meta/llama-3.1-8b-instruct-fp8',
+    displayName: 'Llama 3.1 8B Instruct (FP8)',
+    available: true,
+    capabilities: ['text-generation', 'multilingual'],
+  },
+  '@cf/meta/llama-4-scout-17b-16e-instruct': {
+    provider: 'workers-ai',
+    apiName: '@cf/meta/llama-4-scout-17b-16e-instruct',
+    displayName: 'Llama 4 Scout 17B',
+    available: true,
+    capabilities: ['text-generation', 'multilingual'],
+  },
+  '@cf/meta/llama-3.2-3b-instruct': {
+    provider: 'workers-ai',
+    apiName: '@cf/meta/llama-3.2-3b-instruct',
+    displayName: 'Llama 3.2 3B Instruct',
+    available: true,
+    capabilities: ['text-generation', 'multilingual'],
   },
 
   // OpenAI Current Models
