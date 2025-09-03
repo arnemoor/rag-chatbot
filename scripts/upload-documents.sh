@@ -73,12 +73,9 @@ upload_file() {
     print_info "Uploading $target_path..."
     
     # Use the determined wrangler command
-    # Determine if we should use --local or --remote based on environment
-    if [ "$ENVIRONMENT" = "development" ]; then
-        LOCATION_FLAG="--local"
-    else
-        LOCATION_FLAG="--remote"
-    fi
+    # Always use --remote for production deployment
+    # The local flag is only for testing with miniflare
+    LOCATION_FLAG="--remote"
     
     if [ "$WRANGLER_CMD" = "wrangler" ]; then
         wrangler r2 object put "$BUCKET_NAME/$target_path" \
