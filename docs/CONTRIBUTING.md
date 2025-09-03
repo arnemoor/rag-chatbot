@@ -1,6 +1,6 @@
-# Contributing to AutoRAG Clean
+# Contributing to AutoRAG
 
-Thank you for your interest in contributing to AutoRAG Clean! This document provides guidelines and instructions for contributing to the project.
+Thank you for your interest in contributing to AutoRAG! This document provides guidelines and instructions for contributing to the project.
 
 ## 🎯 Getting Started
 

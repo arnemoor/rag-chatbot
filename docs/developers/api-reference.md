@@ -41,7 +41,7 @@ Health Check: https://your-worker-name.your-subdomain.workers.dev/health
 No authentication required. API keys for external models are managed internally via Worker secrets.
 
 ### Rate Limits
-**Not implemented in this PoC.** The API has no rate limiting - relies on Cloudflare's basic DDoS protection only.
+Rate limiting can be enabled via the `ENABLE_RATE_LIMITING` environment variable. Default: 60 requests/minute per IP when enabled.
 
 ## Chat Endpoints
 
@@ -77,10 +77,10 @@ Send a chat message and receive an AI response with citations.
 curl -X POST https://your-worker-name.your-subdomain.workers.dev \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "How do I configure database connection for LibraryOnline?",
+    "query": "How do I configure the API connection?",
     "language": "en",
     "category": "technology",
-    "product": "libraryonline",
+    "product": "docs",
     "provider": "openai",
     "model": "gpt-4o-mini",
     "sessionId": "123e4567-e89b-12d3-a456-426614174000"
@@ -90,7 +90,7 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
 #### Response Format
 ```json
 {
-  "text": "To configure the database connection in LibraryOnline:\n\n1. Navigate to Settings > Database Configuration\n2. Enter your database server details...",
+  "text": "To configure the database connection in the system:\n\n1. Navigate to Settings > Database Configuration\n2. Enter your database server details...",
   "citations": [
     {
       "filename": "database-configuration.md",
@@ -100,7 +100,7 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
     {
       "filename": "admin-guide.pdf", 
       "relevance": 0.87,
-      "snippet": "For administrators setting up LibraryOnline..."
+      "snippet": "For admins setting up the system..."
     }
   ],
   "sessionId": "123e4567-e89b-12d3-a456-426614174000",
@@ -110,8 +110,7 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
     "responseTime": 1847,
     "language": "en",
     "category": "fiction",
-    "product": "novels",
-    "product": "libraryonline"
+    "product": "novels"
   }
 }
 ```
@@ -141,8 +140,8 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
   "model": "gpt-5-mini", 
   "responseTime": 1847,
   "language": "en",
-  "dignity": "administrator",
-  "product": "libraryonline",
+  "dignity": "admin",
+  "product": "docs",
   "tokenUsage": {
     "input": 245,
     "output": 156,
@@ -440,11 +439,10 @@ print(response['text'])
 curl -X POST https://your-worker-name.your-subdomain.workers.dev \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "What are the system requirements for LibraryOnline?",
+    "query": "What are the system requirements for the system?",
     "language": "en",
     "category": "fiction",
     "product": "novels",
-    "product": "libraryonline",
     "provider": "workers-ai",
     "model": "@cf/meta/llama-3.1-8b-instruct-fast"
   }'
@@ -459,7 +457,6 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
     "language": "de",
     "category": "fiction",
     "product": "novels",
-    "product": "libraryonline",
     "provider": "openai",
     "model": "gpt-5-mini"
   }'
@@ -470,7 +467,7 @@ curl -X POST https://your-worker-name.your-subdomain.workers.dev \
 curl -X POST https://your-worker-name.your-subdomain.workers.dev \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Explain the complete patron data migration process from Librarywin to KnowledgeHub",
+    "query": "Explain the complete user data migration process from System A to System B",
     "language": "en",
     "category": "fiction",
     "product": "novels", 
@@ -529,13 +526,13 @@ class ChatSession {
 // Usage
 const session = new ChatSession(client, {
   language: 'en',
-  dignity: 'librarian',
+  dignity: 'admin',
   product: 'libraryonline',
   provider: 'openai',
   model: 'gpt-5-mini'
 });
 
-await session.sendMessage("What is LibraryOnline?");
+await session.sendMessage("What is the system?");
 await session.sendMessage("How do I install it?");
 console.log(session.getHistory());
 ```
@@ -571,9 +568,9 @@ async function processBatchQueries(queries, config) {
 
 // Usage
 const queries = [
-  "What is LibraryOnline?",
-  "How do I install Librarywin?",
-  "What are the KnowledgeHub system requirements?",
+  "What is the system?",
+  "How do I install System A?",
+  "What are the System B system requirements?",
   "How do I configure ScholarAccess?"
 ];
 
@@ -632,7 +629,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/autorag
     "filters": {
       "type": "eq",
       "key": "folder", 
-      "value": "libraryonline/administrator/en/"
+      "value": "libraryonline/admin/en/"
     },
     "max_num_results": 5,
     "model": "@cf/meta/llama-3.1-8b-instruct-fast"
@@ -649,7 +646,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/autorag
     "filters": {
       "type": "eq",
       "key": "folder",
-      "value": "libraryonline/administrator/en/"
+      "value": "libraryonline/admin/en/"
     },
     "max_num_results": 5,
     "ranking_options": {
@@ -736,7 +733,7 @@ const filter = {
   type: "or",
   filters: [
     { type: "eq", key: "folder", value: "libraryonline/general/en/" },
-    { type: "eq", key: "folder", value: "libraryonline/librarian/en/" }
+    { type: "eq", key: "folder", value: "libraryonline/admin/en/" }
   ]
 };
 ```

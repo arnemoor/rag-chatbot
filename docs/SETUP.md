@@ -26,8 +26,8 @@ This guide walks you through setting up and deploying the AutoRAG library docume
 3. **API Credentials**:
    - Cloudflare Account ID
    - Cloudflare API Token with permissions:
-     - AutoRAG:Read/Write
-     - R2:Read/Write
+     - AutoRAG:Edit
+     - R2:Edit
      - Workers:Edit
      - Pages:Edit
 
