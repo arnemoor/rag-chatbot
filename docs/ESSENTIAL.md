@@ -17,7 +17,9 @@
 
 3. **Upload Documents**
    ```bash
-   ./scripts/upload-library-documents.sh
+   ./scripts/upload-documents.sh
+   # Or for full sync (removes orphaned files):
+   ./scripts/upload-documents.sh --sync
    ```
 
 ## Configuration
@@ -63,7 +65,7 @@ Check `api-url` attribute points to your worker URL.
 
 - `setup.sh` - Initial Cloudflare setup
 - `deploy.sh` - Deploy worker and widget
-- `upload-library-documents.sh` - Upload documents
+- `upload-documents.sh` - Upload/sync documents (use --sync for full sync)
 - `test-all.sh` - Run all tests
 
 ## Contributing

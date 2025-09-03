@@ -123,7 +123,7 @@ This script will:
 
 To also upload sample documents:
 ```bash
-./scripts/upload-library-documents.sh
+./scripts/upload-documents.sh
 ```
 
 ### Option B: Step-by-Step Deployment
@@ -140,7 +140,7 @@ npx wrangler pages deploy dist --project-name autorag-widget
 
 # 3. Upload documents
 cd ..
-./scripts/upload-library-documents.sh
+./scripts/upload-documents.sh
 
 # 4. Update configuration
 ./scripts/update-deployment-config.sh
@@ -237,8 +237,14 @@ These are used by the widget to find the API automatically.
 
 2. Run upload script:
    ```bash
-   ./scripts/upload-library-documents.sh
+   # Upload/update documents only
+   ./scripts/upload-documents.sh
+   
+   # Or sync with R2 (removes orphaned files)
+   ./scripts/upload-documents.sh --sync
    ```
+   
+   See [Document Management Guide](./DOCUMENT_MANAGEMENT.md) for detailed usage.
 
 ### Document Formats Supported
 
