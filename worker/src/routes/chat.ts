@@ -323,7 +323,8 @@ export async function handleChat(
         'Invalid JSON in request body',
         400,
         corsHeaders,
-        { validation: [{ field: 'body', message: 'Request body must be valid JSON' }] }
+        { validation: [{ field: 'body', message: 'Request body must be valid JSON' }] },
+        env
       );
     }
 
@@ -334,7 +335,8 @@ export async function handleChat(
         'Validation failed',
         400,
         corsHeaders,
-        { validation: validation.errors }
+        { validation: validation.errors },
+        env
       );
     }
 
@@ -347,7 +349,8 @@ export async function handleChat(
           'Invalid input',
           400,
           corsHeaders,
-          { validation: [{ field: 'query', message: error.message }] }
+          { validation: [{ field: 'query', message: error.message }] },
+          env
         );
       }
       throw error;

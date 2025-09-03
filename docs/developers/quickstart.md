@@ -107,17 +107,17 @@ console.log('Sources:', data.citations);
 git clone https://github.com/your-org/cf-chatbot-widget.git
 cd cf-chatbot-widget
 
-# Run the setup script (handles everything automatically)
-./scripts/setup.sh
+# Install dependencies and deploy
+./scripts/install-dependencies.sh
+./scripts/deploy.sh
 ```
 
-The setup script will:
-1. Install dependencies
-2. Create Cloudflare resources (R2 bucket, AutoRAG instance, AI Gateway)
-3. Deploy the Worker API
-4. Deploy the frontend widget
-5. Upload sample documents
-6. Trigger indexing
+The deploy script will:
+1. Generate configuration from templates
+2. Deploy the Worker API with secrets
+3. Deploy the frontend widget to Pages
+4. Set up API keys if provided
+5. Generate deployment configuration
 
 ### Manual Setup - 10 Minutes
 
