@@ -54,7 +54,7 @@ describe('Worker Main Handler', () => {
       expect(response.headers.get('Access-Control-Allow-Headers')).toContain('Content-Type');
     });
 
-    it('should use wildcard CORS when no specific origins configured', async () => {
+    it('should echo origin and set credentials when no specific origins configured and origin present', async () => {
       env.ALLOWED_ORIGINS = undefined;
 
       const request = new Request('http://localhost:8787/api/chat', {
@@ -62,6 +62,23 @@ describe('Worker Main Handler', () => {
         headers: {
           Origin: 'http://example.com',
         },
+      });
+
+      const workerModule = await import('./index');
+      const response = await workerModule.default.fetch(request, env);
+
+      // Should echo the origin when present
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('http://example.com');
+      // Should set credentials when echoing origin
+      expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true');
+    });
+
+    it('should use wildcard CORS when no specific origins configured and no origin header', async () => {
+      env.ALLOWED_ORIGINS = undefined;
+
+      const request = new Request('http://localhost:8787/api/chat', {
+        method: 'OPTIONS',
+        // No Origin header
       });
 
       const workerModule = await import('./index');
