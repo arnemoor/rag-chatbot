@@ -3,6 +3,8 @@
  * Handles all API communication for the widget
  */
 
+import { validateAndRateLimit, validateConfiguration } from '../utils/input-validator.js';
+
 export class ApiService {
   constructor(apiUrl) {
     this.apiUrl = apiUrl;
@@ -17,24 +19,35 @@ export class ApiService {
    * @returns {Promise<Object>} API response
    */
   async sendMessage(params) {
-    const {
-      query,
-      language,
-      category,
-      product,
-      provider,
-      model,
-      sessionId,
-    } = params;
-
+    // Validate and rate limit the request
+    const validation = validateAndRateLimit(params);
+    
+    if (!validation.isValid) {
+      if (validation.rateLimited) {
+        throw new ApiError(
+          validation.errors[0].message,
+          429,
+          { 
+            rateLimited: true, 
+            retryAfter: validation.retryAfter 
+          }
+        );
+      }
+      
+      // Throw validation error with details
+      const errorMessages = validation.errors.map(e => `${e.field}: ${e.message}`).join(', ');
+      throw new ApiError(`Validation failed: ${errorMessages}`, 400, { errors: validation.errors });
+    }
+    
+    // Use sanitized data from validation
     const body = {
-      query,
-      language,
-      category,
-      product,
-      provider,
-      model,
-      sessionId,
+      query: validation.data.query,
+      language: validation.data.language,
+      category: validation.data.category,
+      product: validation.data.product,
+      provider: validation.data.provider,
+      model: validation.data.model,
+      sessionId: validation.data.sessionId,
     };
 
     return this.request('POST', '', body);
