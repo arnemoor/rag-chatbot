@@ -5,6 +5,40 @@
 
 import DOMPurify from 'dompurify';
 
+// Configure DOMPurify for strict XSS prevention
+const PURIFY_CONFIG = {
+  ALLOWED_TAGS: [
+    'p', 'br', 'strong', 'em', 'u', 'code', 'pre',
+    'ul', 'ol', 'li', 'a', 'blockquote', 'h3', 'h4'
+  ],
+  ALLOWED_ATTR: ['href', 'target', 'rel'],
+  ALLOW_DATA_ATTR: false,
+  ALLOWED_URI_REGEXP: /^https?:\/\//i,
+  SAFE_FOR_TEMPLATES: true,
+  WHOLE_DOCUMENT: false,
+  RETURN_DOM: false,
+  RETURN_DOM_FRAGMENT: false,
+  FORCE_BODY: true,
+  SANITIZE_DOM: true,
+  KEEP_CONTENT: true,
+  IN_PLACE: false
+};
+
+// Add hooks to enforce security
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  // Set secure attributes for links
+  if (node.tagName === 'A') {
+    node.setAttribute('target', '_blank');
+    node.setAttribute('rel', 'noopener noreferrer');
+    
+    // Ensure only HTTPS links (except for localhost)
+    const href = node.getAttribute('href');
+    if (href && !href.startsWith('https://') && !href.includes('localhost')) {
+      node.removeAttribute('href');
+    }
+  }
+});
+
 export class ChatMessage {
   constructor() {
     this.messageIdCounter = 0;
@@ -34,7 +68,7 @@ export class ChatMessage {
       messageEl.innerHTML = this.getLoadingHTML();
     } else {
       const formattedText = this.formatMessage(text);
-      messageEl.innerHTML = DOMPurify.sanitize(formattedText);
+      messageEl.innerHTML = DOMPurify.sanitize(formattedText, PURIFY_CONFIG);
     }
 
     return messageEl;
@@ -149,7 +183,7 @@ export class ChatMessage {
 
     if (element) {
       const formattedText = this.formatMessage(newText);
-      element.innerHTML = DOMPurify.sanitize(formattedText);
+      element.innerHTML = DOMPurify.sanitize(formattedText, PURIFY_CONFIG);
       element.setAttribute('data-status', 'updated');
     }
   }

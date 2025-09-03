@@ -598,14 +598,11 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
     <script>
       // API URL and configuration
       let apiUrl = null;
-      let dynamicConfig = null;
 
       // Cached data from API
       let availableLanguages = [];
       let availableCategories = [];
       let availableProviders = [];
-      let availableModels = {};
-      let productsByCategory = {};
 
       const sampleQuestions = {
         en: [
@@ -690,40 +687,22 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
       // Load dynamic configuration from API
       async function loadDynamicConfiguration() {
         try {
-          // Load full configuration
-          const configResponse = await fetch(`${apiUrl}/config`);
-          if (configResponse.ok) {
-            dynamicConfig = await configResponse.json();
-          }
-
-          // Load specific configuration sections
+          // Load languages
           const langResponse = await fetch(`${apiUrl}/config/languages`);
           if (langResponse.ok) {
             availableLanguages = await langResponse.json();
           }
 
+          // Load categories
           const catResponse = await fetch(`${apiUrl}/config/categories`);
           if (catResponse.ok) {
             availableCategories = await catResponse.json();
           }
 
+          // Load providers
           const provResponse = await fetch(`${apiUrl}/config/providers`);
           if (provResponse.ok) {
             availableProviders = await provResponse.json();
-          }
-
-          const modelResponse = await fetch(`${apiUrl}/config/models`);
-          if (modelResponse.ok) {
-            availableModels = await modelResponse.json();
-          }
-
-          // Build products mapping
-          for (const category of availableCategories) {
-            const prodResponse = await fetch(`${apiUrl}/config/products?category=${category.id}`);
-            if (prodResponse.ok) {
-              const products = await prodResponse.json();
-              productsByCategory[category.id] = products.map((p) => p.id);
-            }
           }
 
           console.log('Dynamic configuration loaded successfully');
@@ -732,7 +711,7 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
           // No fallback - use empty arrays
           availableLanguages = [];
           availableCategories = [];
-          productsByCategory = {};
+          availableProviders = [];
         }
       }
 
@@ -788,7 +767,7 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
 
         productSelect.innerHTML = '';
 
-        // Try to get products from API first
+        // Get products from API
         if (category && apiUrl) {
           try {
             const response = await fetch(`${apiUrl}/config/products?category=${category}`);
@@ -801,21 +780,20 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
                   product.name || product.id.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
                 productSelect.appendChild(option);
               });
-              return;
             }
           } catch (error) {
-            console.error('Failed to load products dynamically:', error);
+            console.error('Failed to load products:', error);
           }
         }
 
-        // Fallback to cached products
-        const products = productsByCategory[category] || [];
-        products.forEach((product) => {
+        // If no products were added, show placeholder
+        if (productSelect.options.length === 0) {
           const option = document.createElement('option');
-          option.value = product;
-          option.textContent = product.charAt(0).toUpperCase() + product.slice(1).replace(/-/g, ' ');
+          option.value = '';
+          option.textContent = 'No products available';
+          option.disabled = true;
           productSelect.appendChild(option);
-        });
+        }
       }
 
       // Update models based on provider
@@ -825,50 +803,41 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
 
         modelSelect.innerHTML = '';
 
-        // Try to get models from API first
+        // Get models directly from provider-specific API endpoint
         if (providerId && apiUrl) {
           try {
-            const response = await fetch(`${apiUrl}/config/models`);
+            const response = await fetch(`${apiUrl}/config/models?provider=${providerId}`);
             if (response.ok) {
               const models = await response.json();
               
-              // Find the provider to get its model list
-              const provider = availableProviders.find((p) => p.id === providerId);
-              if (provider && provider.models) {
-                provider.models.forEach((modelId) => {
-                  const modelConfig = models[modelId] || availableModels[modelId];
-                  if (modelConfig && modelConfig.available) {
-                    const option = document.createElement('option');
-                    option.value = modelId;
-                    option.textContent = modelConfig.displayName || modelId;
-                    modelSelect.appendChild(option);
-                  }
-                });
+              // Add each model to the dropdown
+              Object.entries(models).forEach(([modelId, modelConfig]) => {
+                if (modelConfig && modelConfig.available) {
+                  const option = document.createElement('option');
+                  option.value = modelId;
+                  option.textContent = modelConfig.displayName || modelId;
+                  modelSelect.appendChild(option);
+                }
+              });
+              
+              if (modelSelect.options.length > 0) {
+                return;
               }
-              return;
             }
           } catch (error) {
-            console.error('Failed to load models dynamically:', error);
+            console.error('Failed to load models for provider:', error);
           }
         }
 
-        // Fallback to basic models
-        const fallbackModels = {
-          'workers-ai': [{ value: '@cf/meta/llama-3.2-3b-instruct', label: 'Llama 3.2 3B' }],
-          openai: [
-            { value: 'gpt-4o', label: 'GPT-4o' },
-            { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-          ],
-          anthropic: [{ value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' }],
-        };
-
-        const models = fallbackModels[providerId] || [];
-        models.forEach((model) => {
+        // If no models were added, show error
+        if (modelSelect.options.length === 0) {
           const option = document.createElement('option');
-          option.value = model.value;
-          option.textContent = model.label;
+          option.value = '';
+          option.textContent = 'No models available';
+          option.disabled = true;
           modelSelect.appendChild(option);
-        });
+          console.error(`No models found for provider: ${providerId}`);
+        }
       }
 
       // Update sample questions based on language
