@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This guide helps you resolve common issues when deploying and using AutoRAG Clean.
+This guide helps you resolve common issues when deploying and using AutoRAG.
 
 ## 🚨 Common Issues and Solutions
 
@@ -160,7 +160,7 @@ Access to fetch at 'https://your-worker.workers.dev' from origin
 **Solution:**
 ```bash
 # Run tests from project root
-cd /path/to/auto-rag-clean
+cd /path/to/rag-chatbot
 npm test
 
 # Not from subdirectories
@@ -365,7 +365,7 @@ npx wrangler r2 object list library-docs-01
 
 If these solutions don't resolve your issue:
 
-1. **Search existing issues**: [GitHub Issues](https://github.com/your-org/auto-rag-clean/issues)
+1. **Search existing issues**: [GitHub Issues](https://github.com/arnemoor/rag-chatbot/issues)
 2. **Ask the community**: [Discord](https://discord.gg/autorag)
 3. **Create new issue** with:
    - Error messages

@@ -1,6 +1,8 @@
-# AutoRAG - Open Source RAG Chatbot System
+# AutoRAG - Open Source RAG Chatbot Framework
 
-A production-ready, deployment-agnostic RAG (Retrieval-Augmented Generation) chatbot system built on Cloudflare's infrastructure. Deploy your own AI-powered document Q&A system in minutes.
+An open-source RAG (Retrieval-Augmented Generation) chatbot framework built on Cloudflare's infrastructure. Deploy your own AI-powered document Q&A system in minutes.
+
+> **Framework Note**: This is an open-source framework designed for evaluation, demonstration, and rapid deployment. By default, it runs in permissive mode to facilitate testing and integration. See [Security Configuration](./docs/SECURITY.md) for production hardening options.
 
 ## ✨ Features
 
@@ -126,6 +128,7 @@ ANTHROPIC_API_KEY=your-key
 - [Documentation Hub](./docs/README.md) - All documentation
 - [Quick Start Guide](./docs/ESSENTIAL.md) - Get started in 5 minutes
 - [API Token Setup](./docs/API_TOKEN_SETUP.md) - Configure permissions
+- [Security Configuration](./docs/SECURITY.md) - Security options and production hardening
 - [Troubleshooting](./docs/TROUBLESHOOTING.md) - Common issues
 
 ## 🎯 Use Cases

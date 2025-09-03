@@ -5,6 +5,7 @@
 - **[Quick Start](./ESSENTIAL.md)** - Get up and running in 5 minutes
 - **[Setup Guide](./SETUP.md)** - Detailed setup instructions
 - **[API Token Setup](./API_TOKEN_SETUP.md)** - Configure Cloudflare permissions
+- **[Security Configuration](./SECURITY.md)** - Security options and production hardening
 - **[Troubleshooting](./TROUBLESHOOTING.md)** - Common issues and solutions
 
 ## For Developers
