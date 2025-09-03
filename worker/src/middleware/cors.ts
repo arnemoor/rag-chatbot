@@ -41,7 +41,12 @@ export function buildCorsHeaders(request: Request, env: Env): CorsHeaders {
     // Default permissive mode for framework/showcase
     // This allows easy evaluation and testing across different domains
     corsHeaders['Access-Control-Allow-Origin'] = requestOrigin || '*';
-    corsHeaders['Access-Control-Allow-Credentials'] = 'true';
+    
+    // Important: Cannot set credentials with wildcard origin per CORS spec
+    // Only set credentials when echoing back a specific origin
+    if (requestOrigin) {
+      corsHeaders['Access-Control-Allow-Credentials'] = 'true';
+    }
     
     // Log once per worker instance to inform about security options
     if (!env.CORS_WARNING_LOGGED) {
