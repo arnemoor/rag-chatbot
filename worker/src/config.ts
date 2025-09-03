@@ -97,7 +97,7 @@ const DEFAULT_PROVIDERS: Provider[] = [
     name: 'OpenAI',
     description: 'OpenAI GPT models',
     requiresApiKey: true,
-    models: ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-5-chat-latest'],
+    models: ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-5-chat-latest', 'gpt-4o', 'gpt-4o-mini'],
     available: true,
   },
   {
@@ -105,7 +105,7 @@ const DEFAULT_PROVIDERS: Provider[] = [
     name: 'Anthropic',
     description: 'Anthropic Claude models',
     requiresApiKey: true,
-    models: ['claude-opus-4-1-20250805', 'claude-sonnet-4-20250514'],
+    models: ['claude-opus-4-1-20250805', 'claude-sonnet-4-20250514', 'claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'],
     available: true,
   },
 ];

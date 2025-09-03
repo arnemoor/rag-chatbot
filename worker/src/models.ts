@@ -49,6 +49,34 @@ export const MODELS: Record<string, ModelConfig> = {
   },
 
   // OpenAI Current Models
+  'gpt-5': {
+    provider: 'openai',
+    apiName: 'gpt-5',
+    displayName: 'GPT-5',
+    available: true,
+    capabilities: ['text-generation', 'vision', 'advanced-reasoning', 'multimodal'],
+  },
+  'gpt-5-mini': {
+    provider: 'openai',
+    apiName: 'gpt-5-mini',
+    displayName: 'GPT-5 Mini',
+    available: true,
+    capabilities: ['text-generation', 'fast', 'cost-effective'],
+  },
+  'gpt-5-nano': {
+    provider: 'openai',
+    apiName: 'gpt-5-nano',
+    displayName: 'GPT-5 Nano',
+    available: true,
+    capabilities: ['text-generation', 'ultra-fast', 'edge-computing'],
+  },
+  'gpt-5-chat-latest': {
+    provider: 'openai',
+    apiName: 'gpt-5-chat-latest',
+    displayName: 'GPT-5 Chat Latest',
+    available: true,
+    capabilities: ['text-generation', 'chat-optimized', 'latest-features'],
+  },
   'gpt-4o': {
     provider: 'openai',
     apiName: 'gpt-4o',
@@ -65,6 +93,20 @@ export const MODELS: Record<string, ModelConfig> = {
   },
 
   // Anthropic Current Models
+  'claude-opus-4-1-20250805': {
+    provider: 'anthropic',
+    apiName: 'claude-opus-4-1-20250805',
+    displayName: 'Claude Opus 4.1',
+    available: true,
+    capabilities: ['text-generation', 'advanced-reasoning', 'long-context', 'multimodal'],
+  },
+  'claude-sonnet-4-20250514': {
+    provider: 'anthropic',
+    apiName: 'claude-sonnet-4-20250514',
+    displayName: 'Claude Sonnet 4.0',
+    available: true,
+    capabilities: ['text-generation', 'balanced-performance', 'cost-effective'],
+  },
   'claude-3-5-sonnet-20241022': {
     provider: 'anthropic',
     apiName: 'claude-3-5-sonnet-20241022',
