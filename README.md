@@ -127,6 +127,7 @@ ANTHROPIC_API_KEY=your-key
 
 - [Documentation Hub](./docs/README.md) - All documentation
 - [Quick Start Guide](./docs/ESSENTIAL.md) - Get started in 5 minutes
+- [Document Management](./docs/DOCUMENT_MANAGEMENT.md) - Upload and sync documents
 - [API Token Setup](./docs/API_TOKEN_SETUP.md) - Configure permissions
 - [Security Configuration](./docs/SECURITY.md) - Security options and production hardening
 - [Troubleshooting](./docs/TROUBLESHOOTING.md) - Common issues
