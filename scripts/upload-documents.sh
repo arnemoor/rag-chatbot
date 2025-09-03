@@ -56,15 +56,12 @@ if command -v wrangler &> /dev/null; then
     # Wrangler is globally installed
     WRANGLER_CMD="wrangler"
     print_info "Using global wrangler installation"
-elif [ -f "$PROJECT_ROOT/widget/node_modules/.bin/wrangler" ]; then
-    # Wrangler is installed in widget node_modules
-    WRANGLER_CMD="cd '$PROJECT_ROOT/widget' && npx wrangler"
-    print_info "Using wrangler from widget/node_modules"
+elif command -v npx &> /dev/null; then
+    # Use npx to run wrangler (it will find it in local node_modules or install it)
+    WRANGLER_CMD="npx"
+    print_info "Using npx to run wrangler"
 else
-    print_error "Wrangler not found! Please run:"
-    echo "  cd widget && npm install"
-    echo "  OR"
-    echo "  npm install -g wrangler"
+    print_error "Neither wrangler nor npx found! Please install Node.js and npm"
     exit 1
 fi
 
@@ -76,17 +73,22 @@ upload_file() {
     print_info "Uploading $target_path..."
     
     # Use the determined wrangler command
+    # Determine if we should use --local or --remote based on environment
+    if [ "$ENVIRONMENT" = "development" ]; then
+        LOCATION_FLAG="--local"
+    else
+        LOCATION_FLAG="--remote"
+    fi
+    
     if [ "$WRANGLER_CMD" = "wrangler" ]; then
         wrangler r2 object put "$BUCKET_NAME/$target_path" \
             --file="$source_file" \
-            --remote
-    else
-        # Run from widget directory with npx
-        cd "$PROJECT_ROOT/widget"
+            $LOCATION_FLAG
+    elif [ "$WRANGLER_CMD" = "npx" ]; then
+        # Use npx to run wrangler
         npx wrangler r2 object put "$BUCKET_NAME/$target_path" \
             --file="$source_file" \
-            --remote
-        cd "$PROJECT_ROOT"
+            $LOCATION_FLAG
     fi
     
     if [ $? -eq 0 ]; then
@@ -185,7 +187,7 @@ echo "   Upload Complete"
 echo "================================================"
 echo ""
 print_success "All library documents have been uploaded"
-print_info "Documents are now organized in 3-level hierarchy:"
+print_info "Documents are organized in 3-level hierarchy:"
 print_info "  {category}/{product}/{language}/document.md"
 print_info "Categories and products will be automatically detected in the interface"
 echo ""
