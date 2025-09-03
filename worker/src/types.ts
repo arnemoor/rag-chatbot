@@ -9,9 +9,19 @@ export interface Env {
   GATEWAY_NAME?: string;
   ENVIRONMENT: string;
 
-  // Optional configuration
-  ALLOWED_ORIGINS?: string; // Comma-separated list of allowed origins for CORS
+  // Security Configuration (all optional - framework defaults to permissive for showcase)
+  ALLOWED_ORIGINS?: string; // Comma-separated list of allowed origins for CORS (empty = allow all)
+  ENABLE_RATE_LIMITING?: string; // 'true' to enable rate limiting (default: false for showcase)
+  RATE_LIMIT_WINDOW_MS?: string; // Rate limit window in milliseconds (default: 60000)
+  RATE_LIMIT_MAX_REQUESTS?: string; // Max requests per window (default: 120)
+  ENABLE_STRICT_CSP?: string; // 'true' to enable strict Content Security Policy (default: false)
+  MAX_REQUEST_SIZE_KB?: string; // Max request size in KB (default: 100)
+  
+  // Debug & Monitoring
   DEBUG_MODE?: string; // 'true' to enable debug info in health endpoint
+  
+  // Runtime flags (internal use)
+  CORS_WARNING_LOGGED?: string; // Internal flag to prevent repeated CORS logs
 
   // Secrets
   OPENAI_API_KEY?: string;

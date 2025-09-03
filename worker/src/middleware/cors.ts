@@ -6,32 +6,48 @@ export interface CorsHeaders {
 
 /**
  * Builds CORS headers based on environment configuration
+ * 
+ * FRAMEWORK NOTE: This is an open-source framework designed for evaluation and showcase.
+ * By default, CORS is permissive to support various deployment scenarios.
+ * For production deployments, set ALLOWED_ORIGINS environment variable to restrict access.
+ * 
  * @param request The incoming request
  * @param env The environment configuration
  * @returns CORS headers object
  */
 export function buildCorsHeaders(request: Request, env: Env): CorsHeaders {
-  const allowedOrigins = env.ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim());
   const requestOrigin = request.headers.get('Origin');
-
   const corsHeaders: CorsHeaders = {
-    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT', // DELETE and PUT for R2 browser and future extensions
+    'Access-Control-Allow-Headers': 'Content-Type, X-Session-Id',
     'Access-Control-Max-Age': '86400',
   };
 
-  // Set CORS origin based on configuration
-  if (allowedOrigins && requestOrigin) {
-    if (allowedOrigins.includes(requestOrigin)) {
+  // Check if CORS should be restrictive (opt-in security)
+  if (env.ALLOWED_ORIGINS) {
+    // User has explicitly configured allowed origins - use strict validation
+    const allowedOrigins = env.ALLOWED_ORIGINS.split(',').map(o => o.trim());
+    
+    if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
       corsHeaders['Access-Control-Allow-Origin'] = requestOrigin;
       corsHeaders['Access-Control-Allow-Credentials'] = 'true';
-    } else {
-      // If origin not in whitelist, don't set CORS headers (request will be blocked)
-      console.warn(`Origin ${requestOrigin} not in allowed origins list`);
+      corsHeaders['Vary'] = 'Origin';
+    } else if (requestOrigin) {
+      // Log unauthorized origin attempts when restrictions are enabled
+      console.warn(`CORS restriction active: Blocked request from origin: ${requestOrigin}`);
+      // Don't set any CORS origin header - this will block the request
     }
   } else {
-    // Default to wildcard for framework flexibility (development/testing)
-    corsHeaders['Access-Control-Allow-Origin'] = '*';
+    // Default permissive mode for framework/showcase
+    // This allows easy evaluation and testing across different domains
+    corsHeaders['Access-Control-Allow-Origin'] = requestOrigin || '*';
+    corsHeaders['Access-Control-Allow-Credentials'] = 'true';
+    
+    // Log once per worker instance to inform about security options
+    if (!env.CORS_WARNING_LOGGED) {
+      console.info('CORS: Running in permissive mode (framework default). Set ALLOWED_ORIGINS to restrict access.');
+      env.CORS_WARNING_LOGGED = 'true';
+    }
   }
 
   return corsHeaders;
