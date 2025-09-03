@@ -102,7 +102,7 @@ if [ -f "wrangler.toml.template" ]; then
     sed -e "s/{{WORKER_NAME}}/$WORKER_NAME/g" \
         -e "s/{{CLOUDFLARE_ACCOUNT_ID}}/$CLOUDFLARE_ACCOUNT_ID/g" \
         -e "s/{{AUTORAG_INSTANCE_ID}}/$AUTORAG_INSTANCE_ID/g" \
-        -e "s/{{AI_GATEWAY_NAME}}/autorag-gateway/g" \
+        -e "s/{{AI_GATEWAY_NAME}}/${AI_GATEWAY_NAME:-autorag-gateway}/g" \
         -e "s/{{R2_BUCKET_NAME}}/$R2_BUCKET/g" \
         wrangler.toml.template > wrangler.toml
     print_success "Worker configuration generated"
@@ -112,8 +112,10 @@ else
 fi
 
 # Deploy worker
+# Note: --env="" explicitly selects the top-level environment (not production)
+# This avoids the "Multiple environments" warning from wrangler
 print_info "Running wrangler deploy (this may take a moment)..."
-WORKER_OUTPUT=$(npx --yes wrangler deploy 2>&1) || {
+WORKER_OUTPUT=$(npx --yes wrangler deploy --env="" 2>&1) || {
     print_error "Worker deployment failed:"
     echo "$WORKER_OUTPUT"
     exit 1
@@ -130,6 +132,35 @@ if [ -z "$WORKER_URL" ]; then
 fi
 
 print_success "Worker deployed: $WORKER_URL"
+
+# Step 2.5: Configure API secrets if available
+print_step "Configuring API secrets..."
+
+# Check and set OpenAI API key if available
+if [ ! -z "$OPENAI_API_KEY" ]; then
+    print_info "Setting OpenAI API key..."
+    echo "$OPENAI_API_KEY" | npx --yes wrangler secret put OPENAI_API_KEY --env="" > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        print_success "OpenAI API key configured"
+    else
+        print_info "OpenAI API key may already be set"
+    fi
+else
+    print_info "No OpenAI API key found in .env"
+fi
+
+# Check and set Anthropic API key if available
+if [ ! -z "$ANTHROPIC_API_KEY" ]; then
+    print_info "Setting Anthropic API key..."
+    echo "$ANTHROPIC_API_KEY" | npx --yes wrangler secret put ANTHROPIC_API_KEY --env="" > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        print_success "Anthropic API key configured"
+    else
+        print_info "Anthropic API key may already be set"
+    fi
+else
+    print_info "No Anthropic API key found in .env"
+fi
 
 # Step 3: Generate configuration files
 print_step "Generating configuration files..."
