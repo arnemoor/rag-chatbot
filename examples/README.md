@@ -4,39 +4,44 @@ This directory contains example configurations for different deployment scenario
 
 ## 📁 Available Examples
 
-### 1. Basic Setup
-- `.env.basic` - Minimal configuration for getting started
-- `wrangler.basic.toml` - Basic Worker configuration
+### Environment Files
+- `.env.basic` - Minimal configuration for getting started (Workers AI only)
+- `.env.production` - Production-ready configuration with security settings
+- `.env.enterprise` - Enterprise features with GPT-5 and Claude 4.x support
+- `.env.security` - Security-focused configuration example
 
-### 2. Production Setup
-- `.env.production` - Production-ready configuration
-- `wrangler.production.toml` - Production Worker with optimizations
-
-### 3. Multi-Language Support
-- `.env.multilang` - Configuration for multi-language deployment
-- `config/languages.json` - Language configuration
-
-### 4. Enterprise Setup
-- `.env.enterprise` - Enterprise features with external AI providers
-- `wrangler.enterprise.toml` - Advanced Worker configuration
-
-### 5. Development Setup
-- `.env.development` - Local development configuration
-- `wrangler.dev.toml` - Development Worker configuration
+### Standalone Chat Application
+- `standalone-chat/` - Complete standalone chat application
+  - `index.html` - Chat interface with provider selection
+  - `chat.js` - Chat logic and API integration
+  - `styles.css` - Custom styling
+  - `config.js` - Configuration settings
+  
+  **Note**: The standalone chat includes support for:
+  - Multiple languages (EN, DE, FR, IT)
+  - Provider selection (Workers AI, OpenAI GPT-5, Anthropic Claude 4.x)
+  - Dynamic category and product selection
+  - Session management
 
 ## 🚀 Quick Start
 
 1. Choose an example that matches your use case
-2. Copy the example files to your project root:
+2. Copy the example .env file to your project root:
    ```bash
    cp examples/.env.production .env
-   cp examples/wrangler.production.toml wrangler.toml
    ```
 3. Update the values with your credentials
-4. Deploy:
+4. Deploy using the automated script:
    ```bash
    ./scripts/deploy.sh
    ```
+   
+The deploy script will:
+- Generate wrangler.toml from template
+- Deploy the worker with your configuration
+- Set up API keys as secrets (if provided)
+- Deploy the widget to Cloudflare Pages
+- Upload sample documents to R2
 
 ## 📝 Configuration Details
 
@@ -44,14 +49,17 @@ This directory contains example configurations for different deployment scenario
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
+| `WORKER_NAME` | Yes | Name for your Worker | `autorag-worker` |
+| `PAGES_PROJECT_NAME` | Yes | Name for your Pages project | `autorag-widget` |
 | `CLOUDFLARE_ACCOUNT_ID` | Yes | Your Cloudflare account ID | `abc123...` |
 | `CLOUDFLARE_API_TOKEN` | Yes | API token with necessary permissions | `xyz789...` |
 | `AUTORAG_INSTANCE_ID` | Yes | Your AutoRAG instance name | `my-instance` |
 | `R2_BUCKET_NAME` | Yes | R2 bucket for documents | `library-docs-01` |
+| `AI_GATEWAY_NAME` | Yes | AI Gateway name | `autorag-gateway` |
 | `DEBUG_MODE` | No | Enable debug information | `true` or `false` |
 | `ALLOWED_ORIGINS` | No | Comma-separated allowed origins | `https://site1.com,https://site2.com` |
-| `OPENAI_API_KEY` | No | For OpenAI model support | `sk-...` |
-| `ANTHROPIC_API_KEY` | No | For Anthropic model support | `sk-ant-...` |
+| `OPENAI_API_KEY` | No | For GPT-5 and GPT-4o support | `sk-...` |
+| `ANTHROPIC_API_KEY` | No | For Claude 4.x and 3.x support | `sk-ant-...` |
 
 ### Widget Integration
 
