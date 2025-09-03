@@ -1,10 +1,11 @@
 import { OpenAI } from 'openai';
 import { Env, ChatRequest, ChatResponse, Citation } from '../types';
-import { validateChatRequest, sanitizeInput } from '../validation';
+import { validateChatRequest, sanitizeInput, InputValidationError } from '../validation';
 import { isModelAvailable, handleFutureModel } from '../models';
 import { buildSystemPrompt, RESPONSE_TEMPLATES } from '../prompts';
 import { getCategories } from '../config';
 import { CorsHeaders } from '../middleware/cors';
+import { createErrorResponse } from '../utils/error-handler';
 import { retryWithBackoff, CircuitBreaker, RetryPresets } from '../utils/retry';
 
 // Circuit breakers for different services
@@ -189,7 +190,7 @@ ${languageInstruction}${query}`;
     }
     // GPT-4 and earlier models use Chat Completions API
     const client = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
+      apiKey: env.OPENAI_API_KEY || '',
       baseURL,
     });
 
@@ -232,7 +233,7 @@ ${languageInstruction}${query}`;
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': env.ANTHROPIC_API_KEY,
+            'x-api-key': env.ANTHROPIC_API_KEY || '',
             'anthropic-version': '2023-06-01',
           },
           body: JSON.stringify({
@@ -312,28 +313,45 @@ export async function handleChat(
 ): Promise<Response> {
   try {
     const startTime = Date.now();
-    const chatRequest: ChatRequest = await request.json();
+    
+    // Parse request body with error handling
+    let chatRequest: ChatRequest;
+    try {
+      chatRequest = await request.json();
+    } catch (error) {
+      return createErrorResponse(
+        'Invalid JSON in request body',
+        400,
+        corsHeaders,
+        { validation: [{ field: 'body', message: 'Request body must be valid JSON' }] }
+      );
+    }
 
     // Validate request
     const validation = await validateChatRequest(chatRequest, env);
     if (!validation.isValid) {
-      return new Response(
-        JSON.stringify({
-          error: 'Validation failed',
-          errors: validation.errors,
-        }),
-        {
-          status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
-        },
+      return createErrorResponse(
+        'Validation failed',
+        400,
+        corsHeaders,
+        { validation: validation.errors }
       );
     }
 
-    // Sanitize query input
-    chatRequest.query = sanitizeInput(chatRequest.query);
+    // Sanitize query input with error handling
+    try {
+      chatRequest.query = sanitizeInput(chatRequest.query);
+    } catch (error) {
+      if (error instanceof InputValidationError) {
+        return createErrorResponse(
+          'Invalid input',
+          400,
+          corsHeaders,
+          { validation: [{ field: 'query', message: error.message }] }
+        );
+      }
+      throw error;
+    }
 
     // Set defaults for language, provider and model only
     const language = chatRequest.language || 'en';

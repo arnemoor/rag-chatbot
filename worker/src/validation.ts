@@ -1,5 +1,5 @@
 import { ChatRequest, Env } from './types';
-import { getCategories, getProducts } from './config';
+import { getCategories } from './config';
 
 export interface ValidationError {
   field: string;
@@ -37,8 +37,8 @@ async function getValidationData(env: Env) {
     // No fallback - if no categories found, return empty
     if (!categories || categories.length === 0) {
       validationCache = {
-        categories: [],
-        productsByCategory: new Map(),
+        categories: [] as string[],
+        productsByCategory: new Map<string, string[]>(),
         timestamp: Date.now(),
       };
       return validationCache;
@@ -68,8 +68,8 @@ async function getValidationData(env: Env) {
     console.error('Failed to load validation data:', error);
     // Return empty validation data on error
     return {
-      categories: [],
-      productsByCategory: new Map(),
+      categories: [] as string[],
+      productsByCategory: new Map<string, string[]>(),
       timestamp: Date.now(),
     };
   }
@@ -77,6 +77,8 @@ async function getValidationData(env: Env) {
 
 const MAX_QUERY_LENGTH = 2000;
 const MIN_QUERY_LENGTH = 1;
+const MAX_SESSION_ID_LENGTH = 100;
+const SESSION_ID_PATTERN = /^[a-zA-Z0-9_-]+$/;
 
 export async function validateChatRequest(request: ChatRequest, env?: Env): Promise<ValidationResult> {
   const errors: ValidationError[] = [];
@@ -155,17 +157,39 @@ export async function validateChatRequest(request: ChatRequest, env?: Env): Prom
     });
   }
 
-  // Validate sessionId format (optional)
-  if (request.sessionId && typeof request.sessionId !== 'string') {
-    errors.push({
-      field: 'sessionId',
-      message: 'SessionId must be a string',
-    });
-  } else if (request.sessionId && request.sessionId.length > 100) {
-    errors.push({
-      field: 'sessionId',
-      message: 'SessionId is too long (max 100 characters)',
-    });
+  // Validate sessionId format (optional) - enhanced validation
+  if (request.sessionId) {
+    if (typeof request.sessionId !== 'string') {
+      errors.push({
+        field: 'sessionId',
+        message: 'SessionId must be a string',
+      });
+    } else if (request.sessionId.length > MAX_SESSION_ID_LENGTH) {
+      errors.push({
+        field: 'sessionId',
+        message: `SessionId is too long (max ${MAX_SESSION_ID_LENGTH} characters)`,
+      });
+    } else if (!SESSION_ID_PATTERN.test(request.sessionId)) {
+      errors.push({
+        field: 'sessionId',
+        message: 'SessionId contains invalid characters. Only alphanumeric, underscore, and hyphen allowed.',
+      });
+    }
+  }
+  
+  // Validate model format if provided
+  if (request.model) {
+    if (typeof request.model !== 'string') {
+      errors.push({
+        field: 'model',
+        message: 'Model must be a string',
+      });
+    } else if (request.model.length > 100) {
+      errors.push({
+        field: 'model',
+        message: 'Model name is too long',
+      });
+    }
   }
 
   return {
