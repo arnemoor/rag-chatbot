@@ -24,6 +24,7 @@ import {
   handleLegacyCategories,
 } from './routes/config';
 import { handleChat } from './routes/chat';
+import { handleAutoRAGSync } from './routes/autorag';
 
 // Utility imports
 import { handleUnknownRoute } from './utils/error-handler';
@@ -90,6 +91,11 @@ export default {
 
       if (url.pathname === '/r2/folder' && request.method === 'POST') {
         return handleR2CreateFolder(request, env, responseHeaders);
+      }
+
+      // AutoRAG sync/indexing endpoint
+      if (url.pathname === '/autorag/sync' && request.method === 'POST') {
+        return handleAutoRAGSync(env, responseHeaders);
       }
 
       // Configuration endpoints
