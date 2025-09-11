@@ -35,38 +35,53 @@ Navigate to: `https://your-domain.pages.dev/r2browser.html`
 
 ### Understanding the Folder Structure
 
-Documents must be organized in a specific hierarchy:
+Documents must be organized in a 3-level hierarchy:
 ```
 category/
-  └── language/
-      └── your-documents.pdf
+  └── product/
+      └── language/
+          └── your-documents.pdf
 ```
 
 **Example:**
 ```
 fiction/
-  ├── en/
-  │   ├── user-manual.pdf
-  │   └── quick-guide.md
-  └── de/
-      └── benutzerhandbuch.pdf
+  └── literature/
+      ├── en/
+      │   ├── classic-novels.pdf
+      │   └── reading-guide.md
+      └── de/
+          └── klassische-romane.pdf
+
+support/
+  └── technical/
+      ├── en/
+      │   └── troubleshooting.pdf
+      └── fr/
+          └── depannage.pdf
 ```
 
 ### Uploading Documents
 
 1. **Create Category Folder** (if needed):
    - Click "📁 New Folder"
-   - Enter category name (e.g., "products", "support", "manuals")
+   - Enter category name (e.g., "fiction", "support", "products")
    - Click Create
 
-2. **Create Language Subfolder**:
+2. **Create Product/Subcategory Folder**:
    - Navigate into the category folder
+   - Click "📁 New Folder"
+   - Enter product name (e.g., "literature", "technical", "user-guides")
+   - Click Create
+
+3. **Create Language Subfolder**:
+   - Navigate into the product folder
    - Click "📁 New Folder"
    - Enter language code (en, de, fr, it)
    - Click Create
 
-3. **Upload Files**:
-   - Navigate to the correct category/language folder
+4. **Upload Files**:
+   - Navigate to the correct category/product/language folder
    - Click "📤 Upload Files"
    - Select your documents (PDF, DOCX, MD, TXT, HTML)
    - Files upload automatically
@@ -149,7 +164,7 @@ The three main dropdowns control what content the chatbot searches:
 
 **Solution:**
 1. Go to R2 Browser
-2. Create folder structure: `category/language/`
+2. Create folder structure: `category/product/language/`
 3. Upload at least one document
 4. Click "🔍 Re-index"
 5. Wait 2-3 minutes
@@ -170,7 +185,7 @@ The three main dropdowns control what content the chatbot searches:
 
 **Solution:**
 1. Verify folder structure in R2 Browser
-2. Ensure documents exist in `category/language/` folders
+2. Ensure documents exist in `category/product/language/` folders
 3. Re-index if needed
 
 ## Step-by-Step: Setting Up Content for First Time
@@ -187,30 +202,37 @@ https://your-domain.pages.dev/r2browser.html
 2. Enter: `support` (or your category name)
 3. Click Create
 
-#### Step 3: Add Language Folder
+#### Step 3: Add Product/Subcategory Folder
 1. Click on `support/` to enter the folder
+2. Click "📁 New Folder"
+3. Enter: `technical` (or your product name)
+4. Click Create
+
+#### Step 4: Add Language Folder
+1. Click on `technical/` to enter the folder
 2. Click "📁 New Folder"
 3. Enter: `en` (for English)
 4. Click Create
 
-#### Step 4: Upload Your First Document
-1. Navigate to `support/en/`
+#### Step 5: Upload Your First Document
+1. Navigate to `support/technical/en/`
 2. Click "📤 Upload Files"
 3. Select a PDF or document
 4. Wait for upload completion
 
-#### Step 5: Trigger Indexing
+#### Step 6: Trigger Indexing
 1. Click "🔍 Re-index" button
 2. Note the Job ID shown
 3. Wait 2-3 minutes for processing
 
-#### Step 6: Test in Playground
+#### Step 7: Test in Playground
 1. Open: `https://your-domain.pages.dev/playground.html`
 2. Language dropdown should show "English"
 3. Category dropdown should show "Support"
-4. Select both and test with questions
+4. Product dropdown should show "Technical"
+5. Select all three and test with questions
 
-#### Step 7: Verify on Demo Page
+#### Step 8: Verify on Demo Page
 1. Open: `https://your-domain.pages.dev/demo.html`
 2. Configure the widget settings
 3. Click the chat button
@@ -274,7 +296,7 @@ After clicking "🔍 Re-index":
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | Dropdowns empty after upload | Documents not indexed | Click "🔍 Re-index" and wait |
-| Uploaded files not searchable | Wrong folder structure | Check: `category/language/file` |
+| Uploaded files not searchable | Wrong folder structure | Check: `category/product/language/file` |
 | Re-index button shows error | Missing credentials | Contact administrator |
 | Documents in wrong language | Incorrect language folder | Move to correct `/en/`, `/de/`, etc. |
 | Chatbot gives generic answers | Content not indexed | Re-index and wait 5 minutes |
