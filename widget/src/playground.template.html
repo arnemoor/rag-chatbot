@@ -720,14 +720,22 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         const select = document.getElementById('language');
         select.innerHTML = '';
 
-        availableLanguages
-          .filter((lang) => lang.available)
-          .forEach((lang) => {
+        const availableLangs = availableLanguages.filter((lang) => lang.available);
+        
+        if (availableLangs.length > 0) {
+          availableLangs.forEach((lang) => {
             const option = document.createElement('option');
             option.value = lang.code;
             option.textContent = `${lang.name} (${lang.nativeName || lang.name})`;
             select.appendChild(option);
           });
+        } else {
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No languages available';
+          option.disabled = true;
+          select.appendChild(option);
+        }
       }
 
       // Update category dropdown options
@@ -735,14 +743,22 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         const select = document.getElementById('category');
         select.innerHTML = '';
 
-        availableCategories
-          .filter((cat) => cat.available)
-          .forEach((cat) => {
+        const availableCats = availableCategories.filter((cat) => cat.available);
+        
+        if (availableCats.length > 0) {
+          availableCats.forEach((cat) => {
             const option = document.createElement('option');
             option.value = cat.id;
             option.textContent = cat.name;
             select.appendChild(option);
           });
+        } else {
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No categories available';
+          option.disabled = true;
+          select.appendChild(option);
+        }
       }
 
       // Update provider dropdown options
