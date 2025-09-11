@@ -6,8 +6,11 @@ export interface Env {
 
   // Environment variables
   AUTORAG_INSTANCE: string;
+  AUTORAG_INSTANCE_ID?: string; // Alternative name for AUTORAG_INSTANCE
   GATEWAY_NAME?: string;
   ENVIRONMENT: string;
+  CLOUDFLARE_ACCOUNT_ID?: string; // Cloudflare account ID for API calls
+  CLOUDFLARE_API_TOKEN?: string; // Cloudflare API token for management operations
 
   // Security Configuration (all optional - framework defaults to permissive for showcase)
   ALLOWED_ORIGINS?: string; // Comma-separated list of allowed origins for CORS (empty = allow all)

@@ -6,6 +6,9 @@ account_id = "{{CLOUDFLARE_ACCOUNT_ID}}"
 # Default vars (used when no --env is specified)
 [vars]
 AUTORAG_INSTANCE = "{{AUTORAG_INSTANCE_ID}}"
+AUTORAG_INSTANCE_ID = "{{AUTORAG_INSTANCE_ID}}"
+CLOUDFLARE_ACCOUNT_ID = "{{CLOUDFLARE_ACCOUNT_ID}}"
+CLOUDFLARE_API_TOKEN = "{{CLOUDFLARE_API_TOKEN}}"
 GATEWAY_NAME = "{{AI_GATEWAY_NAME}}"
 ENVIRONMENT = "development"
 # Optional: Enable debug mode for health endpoint (shows configuration status)
@@ -19,6 +22,9 @@ DEBUG_MODE = "true"
 # Production environment  
 [env.production.vars]
 AUTORAG_INSTANCE = "{{AUTORAG_INSTANCE_ID}}"
+AUTORAG_INSTANCE_ID = "{{AUTORAG_INSTANCE_ID}}"
+CLOUDFLARE_ACCOUNT_ID = "{{CLOUDFLARE_ACCOUNT_ID}}"
+CLOUDFLARE_API_TOKEN = "{{CLOUDFLARE_API_TOKEN}}"
 GATEWAY_NAME = "{{AI_GATEWAY_NAME}}"
 ENVIRONMENT = "production"
 # Disable debug mode in production
