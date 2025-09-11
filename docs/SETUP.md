@@ -62,7 +62,7 @@ This installs:
 - Go to: My Profile → API Tokens → Create Token
 - Use "Custom token" with these permissions:
   - Account: AutoRAG:Edit
-  - Account: Cloudflare Workers R2 Storage:Edit  
+  - Account: Workers R2 Storage:Edit  
   - Account: Workers Scripts:Edit
   - Account: Cloudflare Pages:Edit
 - Copy the token immediately!
