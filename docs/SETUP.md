@@ -89,6 +89,10 @@ cp examples/.env.basic .env
 Edit .env with the values from above:
 
 ```env
+# Project Names (must be unique per deployment in your account)
+WORKER_NAME=autorag-worker
+PAGES_PROJECT_NAME=autorag-widget
+
 # From Cloudflare Dashboard (right sidebar)
 CLOUDFLARE_ACCOUNT_ID=your-account-id
 
@@ -136,7 +140,7 @@ npx wrangler deploy
 # 2. Deploy Widget
 cd ../widget
 npm run build
-npx wrangler pages deploy dist --project-name autorag-widget
+npx wrangler pages deploy dist --project-name $PAGES_PROJECT_NAME
 
 # 3. Upload documents
 cd ..
