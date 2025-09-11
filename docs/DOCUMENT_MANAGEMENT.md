@@ -1,10 +1,31 @@
 # Document Management Guide
 
-This guide explains how to manage documents in your AutoRAG R2 bucket, including uploading, updating, and synchronizing documents.
+This guide explains how to manage documents in your AutoRAG R2 bucket using both the web interface and command-line tools.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Document Structure](#document-structure)
+- [R2 Browser Web Interface](#r2-browser-web-interface)
+  - [Accessing the R2 Browser](#accessing-the-r2-browser)
+  - [Managing Files and Folders](#managing-files-and-folders)
+  - [Re-indexing Documents](#re-indexing-documents)
+- [Command-Line Upload Script](#command-line-upload-script)
+  - [Basic Upload](#basic-upload-default)
+  - [Full Sync Mode](#full-sync-mode)
+- [How It Works with the Chatbot](#how-it-works-with-the-chatbot)
+- [Common Scenarios](#common-scenarios)
+- [Troubleshooting](#troubleshooting)
+- [Best Practices](#best-practices)
 
 ## Overview
 
-The `upload-documents.sh` script manages documents in your R2 bucket, supporting both incremental updates and full synchronization with your local document repository.
+You can manage documents in your R2 bucket using two methods:
+
+1. **R2 Browser (Web Interface)** - User-friendly interface for uploading, organizing, and indexing documents
+2. **Upload Script (Command Line)** - Automated tool for bulk operations and synchronization
+
+Both methods work with the same R2 bucket and AutoRAG indexing system.
 
 ## Document Structure
 
@@ -21,7 +42,102 @@ sample-documents/
 │   │   └── it/
 ```
 
-## Upload Script Usage
+## R2 Browser Web Interface
+
+The R2 Browser provides a visual interface for managing your documents directly from your web browser.
+
+### Accessing the R2 Browser
+
+Navigate to: `https://your-domain.pages.dev/r2browser.html`
+
+### Interface Overview
+
+The R2 Browser displays:
+- **Current Path**: Shows your location in the folder hierarchy
+- **Action Buttons**: New Folder, Upload Files, Refresh, Re-index
+- **File List**: Shows folders and files with their sizes
+- **Statistics**: Total files and storage used
+
+### Managing Files and Folders
+
+#### Creating Folders
+
+1. Click **📁 New Folder** button
+2. Enter the folder name (e.g., "fiction", "en", "products")
+3. Click Create
+4. Navigate into the folder by clicking on it
+
+**Important**: Follow the required structure:
+- First level: Category (e.g., "fiction", "support")
+- Second level: Language code (e.g., "en", "de", "fr")
+- Third level: Your documents
+
+#### Uploading Files
+
+1. Navigate to the correct `category/language/` folder
+2. Click **📤 Upload Files** button
+3. Select one or multiple files
+4. Files upload automatically with progress indication
+5. Supported formats: PDF, DOCX, MD, TXT, HTML, CSV, XLSX
+
+#### Deleting Files
+
+1. Find the file in the list
+2. Click the **Delete** button next to the file
+3. Confirm deletion when prompted
+4. File is immediately removed from R2
+
+#### Refreshing the View
+
+Click **🔄 Refresh** to update the file list if changes were made outside the browser.
+
+### Re-indexing Documents
+
+The **🔍 Re-index** button triggers AutoRAG to process your documents for the chatbot.
+
+#### When to Re-index
+
+You should re-index after:
+- Uploading new documents
+- Deleting documents
+- Updating existing documents
+- When chatbot isn't finding your content
+
+#### How Re-indexing Works
+
+1. Click the **🔍 Re-index** button
+2. Button changes to "⏳ Indexing..." 
+3. AutoRAG processes all documents in R2
+4. You receive a Job ID for tracking
+5. Button shows "✅ Indexed!" when complete
+6. Processing typically takes 2-5 minutes
+
+#### What Happens During Indexing
+
+- Documents are converted to searchable text
+- Content is split into chunks for better retrieval
+- Vector embeddings are created for semantic search
+- Language and category metadata is extracted
+- Dropdowns in the Playground populate based on your content
+
+### Impact on Chatbot Dropdowns
+
+The folder structure directly affects what appears in the chatbot interface:
+
+| Your Folders | → | Playground Dropdowns |
+|--------------|---|---------------------|
+| `/fiction/en/` | → | Language: "English", Category: "Fiction" |
+| `/support/de/` | → | Language: "Deutsch", Category: "Support" |
+| `/products/fr/` | → | Language: "Français", Category: "Products" |
+
+If dropdowns show "No items available", you need to:
+1. Ensure proper folder structure exists
+2. Upload at least one document
+3. Click Re-index and wait for completion
+
+## Command-Line Upload Script
+
+For bulk operations and automation, use the `upload-documents.sh` script.
 
 ### Basic Upload (Default)
 
@@ -75,7 +191,7 @@ When using `--sync`, the script:
 
 ### 3. AutoRAG Indexing
 
-After upload, the script automatically triggers AutoRAG indexing to process the new/updated documents.
+After upload, the script automatically triggers AutoRAG indexing to process the new/updated documents (same as clicking Re-index in the R2 Browser).
 
 ### 4. Progress Tracking
 
@@ -84,6 +200,58 @@ The script provides colored output showing:
 - ✅ Successful uploads/deletions
 - ❌ Failed operations
 - ⚠️ Warnings (files to be deleted)
+
+## How It Works with the Chatbot
+
+### The Complete Flow
+
+```
+1. Upload Documents → 2. Re-index → 3. Available in Chatbot
+```
+
+#### Step 1: Document Upload
+- Use R2 Browser or upload script
+- Files stored in R2 bucket
+- Must follow category/language structure
+
+#### Step 2: Indexing Process
+- Triggered by Re-index button or script
+- AutoRAG processes all documents
+- Creates searchable index
+- Extracts metadata for filtering
+
+#### Step 3: Chatbot Availability
+- Playground dropdowns populate
+- Language dropdown shows available languages
+- Category dropdown shows document categories
+- Chatbot can answer questions from your content
+
+### Understanding Empty Dropdowns
+
+When you first set up or see "No items available":
+
+| Symptom | Cause | Solution |
+|---------|-------|----------|
+| "No languages available" | No documents indexed | Upload docs → Re-index |
+| "No categories available" | Wrong folder structure | Check category/language folders |
+| "No products available" | No subcategories | This is optional, can be empty |
+| Chatbot gives generic answers | Content not indexed | Re-index and wait 5 minutes |
+
+### Testing Your Setup
+
+1. **Upload a Test Document**:
+   - Create folder: `test/en/`
+   - Upload a simple PDF or text file
+   - Click Re-index
+
+2. **Check Playground** (after 2-3 minutes):
+   - Language dropdown should show "English"
+   - Category dropdown should show "Test"
+   - Ask a question about your document
+
+3. **Verify Responses**:
+   - Chatbot should reference your document
+   - Answers should be specific to your content
 
 ## Common Scenarios
 
