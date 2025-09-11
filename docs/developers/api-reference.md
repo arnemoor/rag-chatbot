@@ -656,11 +656,33 @@ curl -X POST "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/autorag
 ```
 
 ### Trigger Indexing
+
+#### Via Worker API (Recommended)
+```bash
+curl -X POST "https://your-worker.workers.dev/autorag/sync" \
+  -H "Content-Type: application/json"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "AutoRAG indexing triggered successfully",
+  "job_id": "job_abc123",
+  "result": {
+    // AutoRAG response details
+  }
+}
+```
+
+#### Direct Cloudflare API
 ```bash
 curl -X PATCH "https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/autorag/rags/{AUTORAG_ID}/sync" \
   -H "Authorization: Bearer ${API_TOKEN}" \
   -H "Content-Type: application/json"
 ```
+
+**Note:** The worker endpoint handles authentication automatically and is preferred for client applications.
 
 ## Best Practices
 
