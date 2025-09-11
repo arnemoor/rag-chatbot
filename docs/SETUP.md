@@ -229,14 +229,15 @@ These are used by the widget to find the API automatically.
 
 ### Upload New Documents
 
-1. Place documents in `sample-documents/category/language/`:
+1. Place documents in `sample-documents/category/product/language/`:
    ```
    sample-documents/
    ├── fiction/
-   │   ├── en/
-   │   │   └── document.md
-   │   └── de/
-   │       └── dokument.md
+   │   └── literature/
+   │       ├── en/
+   │       │   └── document.md
+   │       └── de/
+   │           └── dokument.md
    ```
 
 2. Run upload script:

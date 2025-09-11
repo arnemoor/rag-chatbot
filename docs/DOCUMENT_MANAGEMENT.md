@@ -33,13 +33,16 @@ Documents must be organized in a 3-level hierarchy:
 
 ```
 sample-documents/
-├── category/           # Top-level category (e.g., fiction, technology)
-│   ├── product/       # Product or subcategory (e.g., novels, programming)
-│   │   ├── en/        # Language folder (en, de, fr, it)
-│   │   │   └── document.md
-│   │   ├── de/
-│   │   ├── fr/
-│   │   └── it/
+├── category/           # Top-level category (e.g., fiction, support, products)
+│   └── product/       # Product or subcategory (e.g., literature, technical)
+│       ├── en/        # Language folder (en, de, fr, it)
+│       │   └── document.md
+│       ├── de/
+│       │   └── document.md
+│       ├── fr/
+│       │   └── document.md
+│       └── it/
+│           └── document.md
 ```
 
 ## R2 Browser Web Interface
@@ -67,14 +70,15 @@ The R2 Browser displays:
 3. Click Create
 4. Navigate into the folder by clicking on it
 
-**Important**: Follow the required structure:
+**Important**: Follow the required 3-level structure:
 - First level: Category (e.g., "fiction", "support")
-- Second level: Language code (e.g., "en", "de", "fr")
-- Third level: Your documents
+- Second level: Product/Subcategory (e.g., "literature", "technical")
+- Third level: Language code (e.g., "en", "de", "fr")
+- Fourth level: Your documents
 
 #### Uploading Files
 
-1. Navigate to the correct `category/language/` folder
+1. Navigate to the correct `category/product/language/` folder
 2. Click **📤 Upload Files** button
 3. Select one or multiple files
 4. Files upload automatically with progress indication
@@ -126,9 +130,9 @@ The folder structure directly affects what appears in the chatbot interface:
 
 | Your Folders | → | Playground Dropdowns |
 |--------------|---|---------------------|
-| `/fiction/en/` | → | Language: "English", Category: "Fiction" |
-| `/support/de/` | → | Language: "Deutsch", Category: "Support" |
-| `/products/fr/` | → | Language: "Français", Category: "Products" |
+| `/fiction/literature/en/` | → | Language: "English", Category: "Fiction", Product: "Literature" |
+| `/support/technical/de/` | → | Language: "Deutsch", Category: "Support", Product: "Technical" |
+| `/products/hardware/fr/` | → | Language: "Français", Category: "Products", Product: "Hardware" |
 
 If dropdowns show "No items available", you need to:
 1. Ensure proper folder structure exists
@@ -212,7 +216,7 @@ The script provides colored output showing:
 #### Step 1: Document Upload
 - Use R2 Browser or upload script
 - Files stored in R2 bucket
-- Must follow category/language structure
+- Must follow category/product/language structure
 
 #### Step 2: Indexing Process
 - Triggered by Re-index button or script
@@ -233,14 +237,14 @@ When you first set up or see "No items available":
 | Symptom | Cause | Solution |
 |---------|-------|----------|
 | "No languages available" | No documents indexed | Upload docs → Re-index |
-| "No categories available" | Wrong folder structure | Check category/language folders |
+| "No categories available" | Wrong folder structure | Check category/product/language folders |
 | "No products available" | No subcategories | This is optional, can be empty |
 | Chatbot gives generic answers | Content not indexed | Re-index and wait 5 minutes |
 
 ### Testing Your Setup
 
 1. **Upload a Test Document**:
-   - Create folder: `test/en/`
+   - Create folders: `test/sample/en/`
    - Upload a simple PDF or text file
    - Click Re-index
 
@@ -261,6 +265,7 @@ When you first set up or see "No items available":
    ```bash
    sample-documents/technology/ai/en/machine-learning.md
    ```
+   (Note: This follows the pattern: category/product/language/filename)
 
 2. Run the upload script:
    ```bash
