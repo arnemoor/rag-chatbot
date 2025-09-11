@@ -87,7 +87,7 @@ function createIframeVersion() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AutoRAG Chat Widget</title>
+  <title>{{MARKETING_NAME}} Chat Widget</title>
   <style>
     body {
       margin: 0;
@@ -124,7 +124,12 @@ function createIframeVersion() {
 </body>
 </html>`;
 
-  fs.writeFileSync('dist/iframe.html', iframeHTML);
+  // Replace placeholders
+  const marketingName = process.env.MARKETING_NAME || 'AutoRAG';
+  const cleanMarketingName = marketingName.replace(/^["']|["']$/g, '').split(' (')[0];
+  const processedHTML = iframeHTML.replace(/\{\{MARKETING_NAME\}\}/g, cleanMarketingName);
+  
+  fs.writeFileSync('dist/iframe.html', processedHTML);
 }
 
 function createLoaderSnippet() {
@@ -132,7 +137,7 @@ function createLoaderSnippet() {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AutoRAG Widget Integration</title>
+  <title>{{MARKETING_NAME}} Widget Integration</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -164,7 +169,7 @@ function createLoaderSnippet() {
   </style>
 </head>
 <body>
-  <h1>AutoRAG Widget Integration Guide</h1>
+  <h1>{{MARKETING_NAME}} Widget Integration Guide</h1>
   
   <div class="method">
     <h2>Method 1: Simple Embedding</h2>
@@ -262,7 +267,12 @@ widget.addEventListener('widget-error', (e) => {
 </body>
 </html>`;
 
-  fs.writeFileSync('dist/loader.html', loaderHTML);
+  // Replace placeholders
+  const marketingName = process.env.MARKETING_NAME || 'AutoRAG';
+  const cleanMarketingName = marketingName.replace(/^["']|["']$/g, '').split(' (')[0];
+  const processedHTML = loaderHTML.replace(/\{\{MARKETING_NAME\}\}/g, cleanMarketingName);
+  
+  fs.writeFileSync('dist/loader.html', processedHTML);
 }
 
 function copyDeploymentConfig() {
@@ -277,10 +287,35 @@ function copyDeploymentConfig() {
 
 function copyHTMLFiles() {
   const srcDir = path.join(__dirname, 'src');
+  
+  // Get marketing name from environment or use default
+  const marketingName = process.env.MARKETING_NAME || 'AutoRAG';
+  // Clean up the marketing name - remove quotes and take only the first part if it has parentheses
+  const cleanMarketingName = marketingName.replace(/^["']|["']$/g, '').split(' (')[0];
 
-  // Copy HTML files from src
-  const htmlFiles = ['index.html', 'demo.html', 'r2browser.html', 'playground.html'];
-  htmlFiles.forEach((file) => {
+  // Process template files
+  const templateFiles = ['demo.template.html', 'r2browser.template.html', 'playground.template.html', 'iframe.template.html'];
+  templateFiles.forEach((templateFile) => {
+    const templatePath = path.join(srcDir, templateFile);
+    if (fs.existsSync(templatePath)) {
+      let content = fs.readFileSync(templatePath, 'utf8');
+      
+      // Replace {{MARKETING_NAME}} placeholder with actual marketing name
+      content = content.replace(/\{\{MARKETING_NAME\}\}/g, cleanMarketingName);
+      
+      // Generate the output filename (remove .template from the name)
+      const outputFile = templateFile.replace('.template', '');
+      
+      // Write to both src (for development) and dist (for deployment)
+      fs.writeFileSync(path.join(srcDir, outputFile), content);
+      fs.writeFileSync(path.join(distDir, outputFile), content);
+      console.log(`   - dist/${outputFile}`);
+    }
+  });
+  
+  // Copy other static HTML files that don't have templates
+  const staticFiles = ['index.html'];
+  staticFiles.forEach((file) => {
     const srcPath = path.join(srcDir, file);
     if (fs.existsSync(srcPath)) {
       const content = fs.readFileSync(srcPath, 'utf8');
@@ -292,7 +327,9 @@ function copyHTMLFiles() {
   // Also check demo folder for legacy compatibility
   const demoPath = path.join(__dirname, 'demo', 'index.html');
   if (fs.existsSync(demoPath)) {
-    const demoContent = fs.readFileSync(demoPath, 'utf8');
+    let demoContent = fs.readFileSync(demoPath, 'utf8');
+    // Apply same replacement
+    demoContent = demoContent.replace(/\{\{MARKETING_NAME\}\}/g, cleanMarketingName);
     // Create demo/index.html for proper routing
     const demoDir = path.join(distDir, 'demo');
     if (!fs.existsSync(demoDir)) {

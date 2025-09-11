@@ -26,6 +26,12 @@ configuration-summary.txt
 widget/src/config.js
 frontend/config.js
 
+# Generated HTML files from templates
+widget/src/demo.html
+widget/src/playground.html
+widget/src/iframe.html
+widget/src/r2browser.html
+
 # Generated config files
 worker/wrangler.toml
 widget/wrangler.toml
