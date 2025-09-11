@@ -67,9 +67,9 @@ if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
     exit 1
 fi
 
-# Set defaults
+# Set defaults - use PAGES_PROJECT_NAME as the standard
 WORKER_NAME="${WORKER_NAME:-autorag-worker}"
-PAGES_PROJECT="${PAGES_PROJECT:-autorag-widget}"
+PAGES_PROJECT="${PAGES_PROJECT_NAME:-autorag-widget}"
 R2_BUCKET="${R2_BUCKET_NAME:-autorag-docs}"
 AUTORAG_INSTANCE="${AUTORAG_INSTANCE_ID:-autorag-instance}"
 
@@ -175,7 +175,7 @@ if [ -f "deployment-config.json.template" ]; then
         -e "s|{{DEPLOYED_AT}}|$DEPLOYED_AT|g" \
         -e "s|{{ACCOUNT_ID}}|$CLOUDFLARE_ACCOUNT_ID|g" \
         -e "s|{{WORKER_NAME}}|$WORKER_NAME|g" \
-        -e "s|{{PAGES_PROJECT}}|$PAGES_PROJECT|g" \
+        -e "s|{{PAGES_PROJECT_NAME}}|$PAGES_PROJECT|g" \
         deployment-config.json.template > deployment-config.json
 else
     cat > deployment-config.json << EOF
@@ -296,7 +296,7 @@ if [ -f "deployment-config.json.template" ]; then
         -e "s|{{DEPLOYED_AT}}|$DEPLOYED_AT|g" \
         -e "s|{{ACCOUNT_ID}}|$CLOUDFLARE_ACCOUNT_ID|g" \
         -e "s|{{WORKER_NAME}}|$WORKER_NAME|g" \
-        -e "s|{{PAGES_PROJECT}}|$PAGES_PROJECT|g" \
+        -e "s|{{PAGES_PROJECT_NAME}}|$PAGES_PROJECT|g" \
         deployment-config.json.template > deployment-config.json
 else
     cat > deployment-config.json << EOF
