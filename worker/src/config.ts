@@ -83,32 +83,50 @@ const LANGUAGE_METADATA: Record<string, { name: string; nativeName: string }> = 
 };
 
 
-const DEFAULT_PROVIDERS: Provider[] = [
-  {
-    id: 'workers-ai',
-    name: 'Workers AI',
-    description: 'Cloudflare Workers AI with built-in RAG',
-    requiresApiKey: false,
-    models: ['@cf/meta/llama-3.2-3b-instruct', '@cf/meta/llama-3.1-8b-instruct-fast'],
-    available: true,
-  },
-  {
-    id: 'openai',
-    name: 'OpenAI',
-    description: 'OpenAI GPT models',
-    requiresApiKey: true,
-    models: ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-5-chat-latest', 'gpt-4o', 'gpt-4o-mini'],
-    available: true,
-  },
-  {
-    id: 'anthropic',
-    name: 'Anthropic',
-    description: 'Anthropic Claude models',
-    requiresApiKey: true,
-    models: ['claude-opus-4-1-20250805', 'claude-sonnet-4-20250514', 'claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'],
-    available: true,
-  },
-];
+/**
+ * Build providers list dynamically based on available API keys
+ * Workers AI is always available (no API key needed)
+ * OpenAI/Anthropic are only included if their API keys are configured
+ */
+function buildProviders(env: Env): Provider[] {
+  const providers: Provider[] = [
+    // Workers AI is always available (built into Cloudflare)
+    {
+      id: 'workers-ai',
+      name: 'Workers AI',
+      description: 'Cloudflare Workers AI with built-in RAG',
+      requiresApiKey: false,
+      models: ['@cf/meta/llama-3.2-3b-instruct', '@cf/meta/llama-3.1-8b-instruct-fast'],
+      available: true,
+    },
+  ];
+
+  // Add OpenAI only if API key is configured
+  if (env.OPENAI_API_KEY) {
+    providers.push({
+      id: 'openai',
+      name: 'OpenAI',
+      description: 'OpenAI GPT models',
+      requiresApiKey: true,
+      models: ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-5-chat-latest', 'gpt-4o', 'gpt-4o-mini'],
+      available: true,
+    });
+  }
+
+  // Add Anthropic only if API key is configured
+  if (env.ANTHROPIC_API_KEY) {
+    providers.push({
+      id: 'anthropic',
+      name: 'Anthropic',
+      description: 'Anthropic Claude models',
+      requiresApiKey: true,
+      models: ['claude-opus-4-1-20250805', 'claude-sonnet-4-20250514', 'claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'],
+      available: true,
+    });
+  }
+
+  return providers;
+}
 
 // Configuration cache
 let configCache: AppConfiguration | null = null;
@@ -133,8 +151,9 @@ export async function loadConfiguration(env: Env): Promise<AppConfiguration> {
       const configText = await configObject.text();
       const loadedConfig = JSON.parse(configText) as AppConfiguration;
 
-      // Merge with models from code
-      loadedConfig.models = MODELS;
+      // Always override with dynamic data from runtime environment
+      loadedConfig.models = MODELS; // Models from code
+      loadedConfig.providers = buildProviders(env); // Providers based on API key availability
 
       // Cache the configuration
       configCache = loadedConfig;
@@ -256,7 +275,7 @@ async function buildDynamicConfiguration(env: Env): Promise<AppConfiguration> {
   return {
     languages,
     categories,
-    providers: DEFAULT_PROVIDERS,
+    providers: buildProviders(env),
     models: MODELS,
     defaultSettings: {
       language: 'en',
