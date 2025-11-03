@@ -323,20 +323,6 @@ function copyHTMLFiles() {
       console.log(`   - dist/${file}`);
     }
   });
-
-  // Also check demo folder for legacy compatibility
-  const demoPath = path.join(__dirname, 'demo', 'index.html');
-  if (fs.existsSync(demoPath)) {
-    let demoContent = fs.readFileSync(demoPath, 'utf8');
-    // Apply same replacement
-    demoContent = demoContent.replace(/\{\{MARKETING_NAME\}\}/g, cleanMarketingName);
-    // Create demo/index.html for proper routing
-    const demoDir = path.join(distDir, 'demo');
-    if (!fs.existsSync(demoDir)) {
-      fs.mkdirSync(demoDir, { recursive: true });
-    }
-    fs.writeFileSync(path.join(demoDir, 'index.html'), demoContent);
-  }
 }
 
 // Run build
