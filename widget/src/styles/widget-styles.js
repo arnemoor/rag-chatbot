@@ -115,6 +115,15 @@ export class WidgetStyles {
         flex-direction: column;
         overflow: hidden;
         animation: slideUp 0.3s ease-out;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* Maximized state */
+      .widget-chat.maximized {
+        width: calc(100vw - 40px);
+        height: calc(100vh - 40px);
+        max-width: 1200px;
+        max-height: calc(100vh - 40px);
       }
       
       @keyframes slideUp {
@@ -137,17 +146,24 @@ export class WidgetStyles {
         align-items: center;
         border-radius: 16px 16px 0 0;
       }
-      
+
       .widget-header h3 {
         font-size: 18px;
         font-weight: 600;
       }
-      
+
+      .widget-header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .widget-maximize,
       .widget-close {
         background: transparent;
         border: none;
         color: white;
-        font-size: 28px;
+        font-size: 24px;
         cursor: pointer;
         width: 32px;
         height: 32px;
@@ -157,7 +173,12 @@ export class WidgetStyles {
         border-radius: 6px;
         transition: background 0.2s;
       }
-      
+
+      .widget-close {
+        font-size: 28px;
+      }
+
+      .widget-maximize:hover,
       .widget-close:hover {
         background: rgba(255, 255, 255, 0.2);
       }
@@ -223,7 +244,23 @@ export class WidgetStyles {
         align-items: center;
         gap: 8px;
       }
-      
+
+      /* Source link styling */
+      .message a.source-link {
+        color: var(--widget-primary);
+        text-decoration: underline;
+        font-weight: 500;
+        transition: opacity 0.2s ease;
+      }
+
+      .message a.source-link:hover {
+        opacity: 0.8;
+      }
+
+      .message-user a.source-link {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
       .loading-dots {
         display: flex;
         gap: 4px;

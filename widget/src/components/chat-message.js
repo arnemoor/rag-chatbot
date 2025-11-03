@@ -191,9 +191,18 @@ export class ChatMessage {
   /**
    * Remove message by ID
    * @param {string} messageId - Message ID to remove
+   * @param {HTMLElement} container - Optional container to search within (for Shadow DOM)
    */
-  removeMessage(messageId) {
-    const element = document.getElementById(`msg-${messageId}`);
+  removeMessage(messageId, container) {
+    let element;
+    if (container) {
+      // Search within container (for Shadow DOM)
+      element = container.querySelector(`#msg-${messageId}`);
+    } else {
+      // Fallback to document search
+      element = document.getElementById(`msg-${messageId}`);
+    }
+
     if (element) {
       element.remove();
     }
@@ -214,9 +223,10 @@ export class ChatMessage {
   /**
    * Remove typing indicator
    * @param {string} indicatorId - Indicator ID
+   * @param {HTMLElement} container - Container to search within
    */
-  removeTypingIndicator(indicatorId) {
-    this.removeMessage(indicatorId);
+  removeTypingIndicator(indicatorId, container) {
+    this.removeMessage(indicatorId, container);
   }
 
   /**

@@ -518,6 +518,13 @@
           <label>Button Text</label>
           <input type="text" id="button-text" value="Chat with AI" placeholder="Custom button text" />
         </div>
+
+        <div class="control-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="checkbox" id="enable-source-links" checked style="cursor: pointer;" />
+            <span>Enable Source Links</span>
+          </label>
+        </div>
       </div>
 
       <div class="button-group">
@@ -674,9 +681,13 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         updateEmbedCode();
 
         // Add event listeners
-        document.getElementById('category').addEventListener('change', updateProducts);
-        document.getElementById('provider').addEventListener('change', updateModels);
-        document.getElementById('language').addEventListener('change', updateQuestions);
+        const categoryEl = document.getElementById('category');
+        const providerEl = document.getElementById('provider');
+        const languageEl = document.getElementById('language');
+
+        if (categoryEl) categoryEl.addEventListener('change', updateProducts);
+        if (providerEl) providerEl.addEventListener('change', updateModels);
+        if (languageEl) languageEl.addEventListener('change', updateQuestions);
 
         // Load initial iframe
         setTimeout(() => {
@@ -825,7 +836,7 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
             const response = await fetch(`${apiUrl}/config/models?provider=${providerId}`);
             if (response.ok) {
               const models = await response.json();
-              
+
               // Add each model to the dropdown
               Object.entries(models).forEach(([modelId, modelConfig]) => {
                 if (modelConfig && modelConfig.available) {
@@ -835,8 +846,11 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
                   modelSelect.appendChild(option);
                 }
               });
-              
+
               if (modelSelect.options.length > 0) {
+                // Update configuration display immediately
+                updateConfiguration();
+                updateEmbedCode();
                 return;
               }
             }
@@ -862,7 +876,11 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         const questionList = document.getElementById('questions');
 
         questionList.innerHTML = '';
-        sampleQuestions[language].forEach((question) => {
+
+        // Handle missing or unknown languages gracefully
+        const questions = sampleQuestions[language] || sampleQuestions['en'] || [];
+
+        questions.forEach((question) => {
           const div = document.createElement('div');
           div.className = 'question';
           div.textContent = question;
@@ -908,6 +926,7 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         const theme = document.getElementById('theme').value;
         const position = document.getElementById('position').value;
         const buttonText = document.getElementById('button-text').value;
+        const enableSourceLinks = document.getElementById('enable-source-links').checked;
 
         const code = `<span class="comment"><!-- {{MARKETING_NAME}} Widget Integration --></span>
 <span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="value">"./autorag-widget.min.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
@@ -919,7 +938,8 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
   <span class="attr">model</span>=<span class="value">"${model}"</span>
   <span class="attr">theme</span>=<span class="value">"${theme}"</span>
   <span class="attr">position</span>=<span class="value">"${position}"</span>
-  <span class="attr">button-text</span>=<span class="value">"${buttonText}"</span><span class="tag">&gt;</span>
+  <span class="attr">button-text</span>=<span class="value">"${buttonText}"</span>
+  <span class="attr">enable-source-links</span>=<span class="value">"${enableSourceLinks}"</span><span class="tag">&gt;</span>
 <span class="tag">&lt;/autorag-widget&gt;</span>`;
 
         document.getElementById('embed-code').innerHTML = code;
@@ -936,6 +956,7 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         const position = document.getElementById('position').value;
         const buttonText = document.getElementById('button-text').value;
         const systemPrompt = document.getElementById('system-prompt').value;
+        const enableSourceLinks = document.getElementById('enable-source-links').checked;
 
         const params = new URLSearchParams({
           language,
@@ -946,6 +967,7 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
           theme,
           position,
           'button-text': buttonText,
+          'enable-source-links': enableSourceLinks,
         });
 
         if (systemPrompt && systemPrompt.trim()) {

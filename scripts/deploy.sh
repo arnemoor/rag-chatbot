@@ -136,6 +136,21 @@ print_success "Worker deployed: $WORKER_URL"
 # Step 2.5: Configure API secrets if available
 print_step "Configuring API secrets..."
 
+# Check and set Cloudflare API token (needed for AutoRAG sync)
+if [ ! -z "$CLOUDFLARE_API_TOKEN" ]; then
+    print_info "Setting Cloudflare API token for Worker runtime..."
+    # Store token in a temp variable since wrangler needs CLOUDFLARE_API_TOKEN env var for auth
+    TOKEN_VALUE="$CLOUDFLARE_API_TOKEN"
+    echo "$TOKEN_VALUE" | npx --yes wrangler secret put CLOUDFLARE_API_TOKEN --env="" 2>&1 | grep -v "Creating the secret for the Worker" || true
+    if [ $? -eq 0 ] || [ $? -eq 1 ]; then
+        print_success "Cloudflare API token configured for Worker"
+    else
+        print_info "Cloudflare API token may already be set"
+    fi
+else
+    print_error "No Cloudflare API token found in .env - AutoRAG sync will not work!"
+fi
+
 # Check and set OpenAI API key if available
 if [ ! -z "$OPENAI_API_KEY" ]; then
     print_info "Setting OpenAI API key..."
@@ -169,6 +184,9 @@ cd "$PROJECT_ROOT"
 DEPLOYED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Generate deployment-config.json
+# Get max upload size from .env, default to 10MB
+MAX_UPLOAD_SIZE="${MAX_UPLOAD_SIZE_MB:-10}"
+
 if [ -f "deployment-config.json.template" ]; then
     sed -e "s|{{WORKER_URL}}|$WORKER_URL|g" \
         -e "s|{{WIDGET_URL}}|pending|g" \
@@ -176,6 +194,7 @@ if [ -f "deployment-config.json.template" ]; then
         -e "s|{{ACCOUNT_ID}}|$CLOUDFLARE_ACCOUNT_ID|g" \
         -e "s|{{WORKER_NAME}}|$WORKER_NAME|g" \
         -e "s|{{PAGES_PROJECT_NAME}}|$PAGES_PROJECT|g" \
+        -e "s|{{MAX_UPLOAD_SIZE_MB}}|$MAX_UPLOAD_SIZE|g" \
         deployment-config.json.template > deployment-config.json
 else
     cat > deployment-config.json << EOF
@@ -183,6 +202,7 @@ else
   "worker_url": "$WORKER_URL",
   "widget_url": "pending",
   "deployed_at": "$DEPLOYED_AT",
+  "max_upload_size_mb": $MAX_UPLOAD_SIZE,
   "environment": {
     "account_id": "$CLOUDFLARE_ACCOUNT_ID",
     "worker_name": "$WORKER_NAME",
@@ -297,6 +317,7 @@ if [ -f "deployment-config.json.template" ]; then
         -e "s|{{ACCOUNT_ID}}|$CLOUDFLARE_ACCOUNT_ID|g" \
         -e "s|{{WORKER_NAME}}|$WORKER_NAME|g" \
         -e "s|{{PAGES_PROJECT_NAME}}|$PAGES_PROJECT|g" \
+        -e "s|{{MAX_UPLOAD_SIZE_MB}}|$MAX_UPLOAD_SIZE|g" \
         deployment-config.json.template > deployment-config.json
 else
     cat > deployment-config.json << EOF
@@ -304,6 +325,7 @@ else
   "worker_url": "$WORKER_URL",
   "widget_url": "$WIDGET_URL",
   "deployed_at": "$DEPLOYED_AT",
+  "max_upload_size_mb": $MAX_UPLOAD_SIZE,
   "environment": {
     "account_id": "$CLOUDFLARE_ACCOUNT_ID",
     "worker_name": "$WORKER_NAME",
