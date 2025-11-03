@@ -369,8 +369,8 @@ print_success "Configuration updated"
 # Step 7: Upload sample documents (optional)
 if [ -d "$PROJECT_ROOT/sample-documents" ] && [ "$SKIP_DOCUMENTS" != "true" ]; then
     print_step "Uploading sample documents..."
-    if [ -f "$SCRIPT_DIR/upload-library-documents.sh" ]; then
-        "$SCRIPT_DIR/upload-library-documents.sh"
+    if [ -f "$SCRIPT_DIR/upload-documents.sh" ]; then
+        "$SCRIPT_DIR/upload-documents.sh"
     else
         print_info "Document upload script not found, skipping..."
     fi
