@@ -126,30 +126,8 @@ export class ConfigurationService {
       return providers;
     } catch (error) {
       console.error('Failed to fetch providers:', error);
-      // Return default providers as fallback
-      return [
-        {
-          id: 'workers-ai',
-          name: 'Workers AI',
-          requiresApiKey: false,
-          models: ['@cf/meta/llama-3.2-3b-instruct'],
-          available: true,
-        },
-        {
-          id: 'openai',
-          name: 'OpenAI',
-          requiresApiKey: true,
-          models: ['gpt-4o', 'gpt-4o-mini'],
-          available: true,
-        },
-        {
-          id: 'anthropic',
-          name: 'Anthropic',
-          requiresApiKey: true,
-          models: ['claude-3-5-sonnet-20241022'],
-          available: true,
-        },
-      ];
+      // Return empty array - configuration must come from API
+      return [];
     }
   }
 
@@ -182,29 +160,8 @@ export class ConfigurationService {
       return models;
     } catch (error) {
       console.error('Failed to fetch models:', error);
-      // Return default models as fallback
-      return {
-        '@cf/meta/llama-3.2-3b-instruct': {
-          provider: 'workers-ai',
-          displayName: 'Llama 3.2 3B',
-          available: true,
-        },
-        'gpt-4o': {
-          provider: 'openai',
-          displayName: 'GPT-4o',
-          available: true,
-        },
-        'gpt-4o-mini': {
-          provider: 'openai',
-          displayName: 'GPT-4o Mini',
-          available: true,
-        },
-        'claude-3-5-sonnet-20241022': {
-          provider: 'anthropic',
-          displayName: 'Claude 3.5 Sonnet',
-          available: true,
-        },
-      };
+      // Return empty object - configuration must come from API
+      return {};
     }
   }
 
@@ -297,38 +254,25 @@ export class ConfigurationService {
 
   /**
    * Get default configuration (fallback)
+   * Returns minimal safe defaults - all dynamic data must come from API
    */
   getDefaultConfiguration() {
     if (this.defaultConfig) {
       return this.defaultConfig;
     }
 
-    // No hardcoded defaults for categories and products
+    // Return minimal configuration - all dynamic data must come from API
     return {
-      languages: [], // Empty - will be discovered from R2
-      categories: [], // Empty - must come from R2
-      providers: [
-        {
-          id: 'workers-ai',
-          name: 'Workers AI',
-          requiresApiKey: false,
-          models: ['@cf/meta/llama-3.2-3b-instruct'],
-          available: true,
-        },
-      ],
-      models: {
-        '@cf/meta/llama-3.2-3b-instruct': {
-          provider: 'workers-ai',
-          displayName: 'Llama 3.2 3B',
-          available: true,
-        },
-      },
+      languages: [], // Must be fetched from API
+      categories: [], // Must be fetched from API
+      providers: [], // Must be fetched from API
+      models: {}, // Must be fetched from API
       defaultSettings: {
         language: 'en',
         category: '', // No default - must be selected
         product: '', // No default - must be selected
-        provider: 'workers-ai',
-        model: '@cf/meta/llama-3.2-3b-instruct',
+        provider: '', // No default - must be selected from API providers
+        model: '', // No default - must be selected from API models
       },
       features: {
         streaming: false,

@@ -183,13 +183,11 @@ class AutoRAGWidget extends HTMLElement {
       }
     }
 
-    // Use fallback if still no URL
+    // Require API URL - no silent fallbacks
     if (!apiUrl) {
-      console.warn(
-        'AutoRAG: No API URL configured. Please set api-url attribute or provide deployment-config.json',
+      throw new Error(
+        'AutoRAG: API URL is required. Please set the api-url attribute or provide deployment-config.json with worker_url'
       );
-      // Use current origin as last resort (for same-origin deployments)
-      apiUrl = window.location.origin;
     }
 
     this.config.apiUrl = apiUrl;

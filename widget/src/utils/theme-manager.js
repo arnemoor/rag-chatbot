@@ -81,18 +81,12 @@ export class ThemeManager {
     if (!this.supportsSystemPreference()) return;
     
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    // Use addEventListener for better compatibility
+
     const handler = (e) => {
       this.setTheme(e.matches ? 'dark' : 'light');
     };
-    
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handler);
-    } else if (mediaQuery.addListener) {
-      // Fallback for older browsers
-      mediaQuery.addListener(handler);
-    }
+
+    mediaQuery.addEventListener('change', handler);
   }
 
   /**

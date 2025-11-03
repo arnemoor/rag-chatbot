@@ -215,14 +215,19 @@ window.AutoRAGConfig = {
   </div>
   
   <div class="method">
-    <h2>Method 4: Iframe Embedding (Legacy)</h2>
-    <p>For complete isolation or legacy browser support:</p>
+    <h2>Method 4: Iframe Embedding</h2>
+    <p>For complete widget isolation, cross-domain embedding, or strict CSP requirements:</p>
     <pre><code>&lt;iframe
   src="https://your-domain.pages.dev/iframe.html?language=en&category=general&product=product-a"
   width="400"
   height="600"
   frameborder="0"
 &gt;&lt;/iframe&gt;</code></pre>
+    <p style="margin-top: 10px; font-size: 14px; color: #64748b;">
+      <strong>Note:</strong> Iframe embedding provides complete style and script isolation,
+      making it ideal for third-party sites or when you need guaranteed sandboxing.
+      For modern browsers with same-domain deployments, direct embedding (Methods 1-3) is recommended.
+    </p>
   </div>
   
   <div class="method">

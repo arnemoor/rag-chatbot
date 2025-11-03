@@ -185,10 +185,10 @@
         position: relative;
       }
 
-      .iframe-wrapper iframe {
+      .iframe-wrapper autorag-widget {
         width: 100%;
         height: 100%;
-        border: none;
+        display: block;
       }
 
       .sidebar {
@@ -456,6 +456,7 @@
         }
       }
     </style>
+    <script src="autorag-widget.min.js"></script>
   </head>
   <body>
     <div class="header">
@@ -548,12 +549,12 @@
         </div>
 
         <div class="chat-container">
-          <div class="iframe-wrapper">
+          <div class="iframe-wrapper" id="widget-container">
             <div class="loading" id="loading">
               <div class="spinner"></div>
               <p style="margin-top: 10px; color: #64748b">Loading chat interface...</p>
             </div>
-            <iframe id="chat-iframe" src="iframe.html"></iframe>
+            <!-- Widget will be inserted here -->
           </div>
 
           <div class="sidebar">
@@ -678,10 +679,59 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         document.getElementById('provider').addEventListener('change', updateModels);
         document.getElementById('language').addEventListener('change', updateQuestions);
 
-        // Load initial iframe
+        // Load initial widget
         setTimeout(() => {
           applySettings();
         }, 100);
+      }
+
+      // Create or recreate the widget with current settings
+      function createWidget() {
+        const container = document.getElementById('widget-container');
+
+        // Remove existing widget if present
+        const existingWidget = container.querySelector('autorag-widget');
+        if (existingWidget) {
+          existingWidget.remove();
+        }
+
+        // Create new widget element
+        const widget = document.createElement('autorag-widget');
+
+        // Apply configuration
+        const language = document.getElementById('language').value;
+        const category = document.getElementById('category').value;
+        const product = document.getElementById('product').value;
+        const provider = document.getElementById('provider').value;
+        const model = document.getElementById('model').value;
+        const theme = document.getElementById('theme').value;
+        const position = document.getElementById('position').value;
+        const buttonText = document.getElementById('button-text').value;
+        const enableSourceLinks = document.getElementById('enable-source-links').checked;
+
+        widget.setAttribute('language', language);
+        widget.setAttribute('category', category);
+        widget.setAttribute('product', product);
+        widget.setAttribute('provider', provider);
+        widget.setAttribute('model', model);
+        widget.setAttribute('theme', theme);
+        widget.setAttribute('position', 'bottom-right'); // Keep bottom-right for playground
+        widget.setAttribute('button-text', buttonText);
+        widget.setAttribute('enable-source-links', enableSourceLinks);
+        widget.setAttribute('api-url', apiUrl);
+        widget.setAttribute('minimized', 'false'); // Always start expanded in playground
+
+        // Insert widget
+        container.appendChild(widget);
+
+        // Force expand after a short delay
+        setTimeout(() => {
+          if (widget.expand && typeof widget.expand === 'function') {
+            widget.expand();
+          }
+        }, 100);
+
+        return widget;
       }
 
       // Load dynamic configuration from API
@@ -955,16 +1005,13 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         // Show loading
         document.getElementById('loading').classList.add('active');
 
-        // Update iframe
-        const iframe = document.getElementById('chat-iframe');
-        iframe.src = `iframe.html?${params.toString()}`;
+        // Create/recreate widget with new settings
+        createWidget();
 
-        // Hide loading after iframe loads
-        iframe.onload = () => {
-          setTimeout(() => {
-            document.getElementById('loading').classList.remove('active');
-          }, 500);
-        };
+        // Hide loading after widget initializes
+        setTimeout(() => {
+          document.getElementById('loading').classList.remove('active');
+        }, 500);
 
         updateConfiguration();
         updateEmbedCode();
@@ -992,10 +1039,7 @@ You are a helpful AI assistant specializing in library and literature topics. Pr
         updateModels();
         updateQuestions();
 
-        // Clear iframe
-        const iframe = document.getElementById('chat-iframe');
-        iframe.src = 'about:blank';
-
+        // Recreate widget with reset settings
         setTimeout(() => {
           applySettings();
         }, 100);
