@@ -437,7 +437,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label class="form-label">Folder Name</label>
-            <input type="text" class="form-input" id="folder-name" placeholder="Enter folder name" />
+            <input type="text" class="form-input" id="folder-name" placeholder="Enter folder name" onkeypress="if(event.key === 'Enter') submitCreateFolder()" />
           </div>
         </div>
         <div class="modal-footer">
@@ -451,7 +451,22 @@
       // Configuration - will be dynamically set
       let API_URL = '';
       let BUCKET_NAME = '';
-      let currentPath = '';
+      let currentPath = '/';
+
+      // Load configuration from deployment config or use defaults
+      window.MAX_UPLOAD_SIZE_MB = 10; // Default 10MB
+
+      // Try to load from deployment config
+      fetch('/deployment-config.json')
+        .then(res => res.json())
+        .then(config => {
+          if (config.max_upload_size_mb) {
+            window.MAX_UPLOAD_SIZE_MB = config.max_upload_size_mb;
+          }
+        })
+        .catch(() => {
+          // Ignore errors, use default
+        });
 
       // Initialize
       async function init() {
@@ -559,10 +574,19 @@
 
         // Render folders (delimited prefixes)
         data.delimitedPrefixes.forEach((prefix) => {
+          // Skip the root prefix when we're at root level
+          if (prefix === '/' && currentPath === '/') return;
+          // Skip the current prefix if it matches current path
+          if (prefix === currentPath) return;
+
           folderCount++;
           // Handle root path properly
           const pathToRemove = currentPath === '/' ? '' : currentPath;
           const folderName = prefix.replace(pathToRemove, '').replace(/\/$/, '');
+
+          // Skip if folder name is empty or just a slash
+          if (!folderName || folderName === '/') return;
+
           html += `
           <div class="file-item" onclick="navigateTo('${prefix}')">
             <div class="file-icon">📁</div>
@@ -570,16 +594,17 @@
               <div class="file-name">${folderName}</div>
               <div class="file-meta">Folder</div>
             </div>
+            <div class="file-actions">
+              <button onclick="deleteFolder('${prefix}'); event.stopPropagation();">Delete</button>
+            </div>
           </div>
         `;
         });
 
         // Render files
         data.objects.forEach((obj) => {
-          // Skip placeholder files
-          if (obj.key.endsWith('.placeholder')) return;
-
           // Skip files that are actually folders (have trailing slash)
+          // These are zero-byte folder objects following S3 standard
           if (obj.key.endsWith('/')) return;
 
           fileCount++;
@@ -687,7 +712,21 @@
       async function uploadFiles(files) {
         if (!files.length) return;
 
+        // Get max file size from server config, fallback to 10MB
+        const MAX_FILE_SIZE = (window.MAX_UPLOAD_SIZE_MB || 10) * 1024 * 1024;
+        let uploadedCount = 0;
+        let skippedCount = 0;
+
         for (const file of files) {
+          // Check file size before uploading
+          if (file.size > MAX_FILE_SIZE) {
+            const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+            const maxSizeMB = Math.floor(MAX_FILE_SIZE / 1024 / 1024);
+            alert(`⚠️ File too large: ${file.name}\n\nSize: ${fileSizeMB}MB\nMax allowed: ${maxSizeMB}MB\n\nNote: Cloudflare AutoRAG can only process files up to 4MB.\nFiles larger than 4MB will upload but may fail during indexing.`);
+            skippedCount++;
+            continue;
+          }
+
           const formData = new FormData();
           formData.append('file', file);
           formData.append('path', currentPath);
@@ -699,10 +738,22 @@
             });
 
             if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
             }
+            uploadedCount++;
           } catch (error) {
             alert(`Error uploading ${file.name}: ${error.message}`);
+          }
+        }
+
+        // Show summary if multiple files
+        if (files.length > 1) {
+          const summary = [];
+          if (uploadedCount > 0) summary.push(`✅ ${uploadedCount} uploaded`);
+          if (skippedCount > 0) summary.push(`⚠️ ${skippedCount} skipped (too large)`);
+          if (summary.length > 0) {
+            alert(summary.join('\n'));
           }
         }
 
@@ -733,15 +784,151 @@
         }
       }
 
+      // Delete folder
+      async function deleteFolder(folderPath) {
+        const folderName = folderPath.replace(/\/$/, '');
+
+        try {
+          // First, check if the folder is empty by listing its contents
+          const checkResponse = await fetch(`${API_URL}/r2/list?prefix=${encodeURIComponent(folderPath)}&delimiter=/`);
+          if (!checkResponse.ok) {
+            throw new Error(`Failed to check folder contents: HTTP ${checkResponse.status}`);
+          }
+
+          const folderContents = await checkResponse.json();
+
+          // Check if folder has any objects or subfolders (excluding the folder object itself)
+          const hasFiles = folderContents.objects.some(obj =>
+            obj.key !== folderPath && obj.key.startsWith(folderPath)
+          );
+          const hasSubfolders = folderContents.delimitedPrefixes.some(prefix =>
+            prefix !== folderPath && prefix.startsWith(folderPath)
+          );
+
+          if (hasFiles || hasSubfolders) {
+            alert(`Cannot delete folder "${folderName}" because it is not empty.\n\nPlease delete all files and subfolders first.`);
+            return;
+          }
+
+          // Confirm deletion
+          if (!confirm(`Are you sure you want to delete the empty folder "${folderName}"?`)) return;
+
+          // Delete the folder (zero-byte object with trailing slash)
+          const response = await fetch(`${API_URL}/r2/delete/${encodeURIComponent(folderPath)}`, {
+            method: 'DELETE',
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          refreshList();
+        } catch (error) {
+          alert(`Error deleting folder: ${error.message}`);
+        }
+      }
+
+      // Poll for job status
+      let pollInterval = null;
+
+      async function pollJobStatus(jobId, button) {
+        let attempts = 0;
+        const maxAttempts = 60; // Poll for up to 5 minutes (5s intervals)
+
+        const poll = async () => {
+          attempts++;
+
+          try {
+            const response = await fetch(`${API_URL}/autorag/jobs/${jobId}`);
+            if (!response.ok) {
+              throw new Error(`Failed to get job status: HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const job = data.job;
+
+            // Cloudflare AutoRAG uses ended_at and end_reason instead of status field
+            const isRunning = !job.ended_at;
+            const isSuccess = job.ended_at && !job.end_reason;
+            const isFailed = job.ended_at && job.end_reason;
+
+            // Update button with status
+            if (isRunning) {
+              button.innerHTML = '<span>⏳</span> Indexing...';
+            } else if (isSuccess) {
+              button.innerHTML = '<span>✅</span> Completed!';
+              button.style.background = '#22c55e';
+              clearInterval(pollInterval);
+
+              // Show simple success message
+              alert('✅ Indexing job completed!\n\nDocuments have been processed and are now searchable.');
+
+              // Reset button after 3 seconds
+              setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = '<span>🔍</span> Re-index';
+                button.style.background = '#10b981';
+              }, 3000);
+            } else if (isFailed) {
+              button.innerHTML = '<span>❌</span> Failed';
+              button.style.background = '#ef4444';
+              clearInterval(pollInterval);
+
+              // Show error details
+              let errorMsg = '❌ Indexing Failed\n\n';
+              errorMsg += `Error: ${job.end_reason}\n`;
+              errorMsg += '\n📋 Common issues:\n';
+              errorMsg += '  • Files larger than 4MB cannot be processed\n';
+              errorMsg += '  • Unsupported file formats\n';
+              errorMsg += '  • Empty or corrupted files';
+              alert(errorMsg);
+
+              // Reset button after 3 seconds
+              setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = '<span>🔍</span> Re-index';
+                button.style.background = '#10b981';
+              }, 3000);
+            }
+
+            // Stop polling after max attempts
+            if (attempts >= maxAttempts) {
+              clearInterval(pollInterval);
+              button.innerHTML = '<span>⏱️</span> Timeout';
+              button.style.background = '#f59e0b';
+              alert('⏱️ Job status check timed out\n\nThe indexing job is still running.\nYou can check progress later by clicking re-index.');
+
+              setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = '<span>🔍</span> Re-index';
+                button.style.background = '#10b981';
+              }, 3000);
+            }
+          } catch (error) {
+            console.error('Error polling job status:', error);
+            // Continue polling on transient errors
+          }
+        };
+
+        // Start polling immediately, then every 5 seconds
+        await poll();
+        pollInterval = setInterval(poll, 5000);
+      }
+
       // Trigger AutoRAG indexing
       async function triggerIndexing() {
         try {
+          // Clear any existing poll interval
+          if (pollInterval) {
+            clearInterval(pollInterval);
+          }
+
           // Show loading state
           const originalBtn = event.target;
           const originalContent = originalBtn.innerHTML;
           originalBtn.disabled = true;
-          originalBtn.innerHTML = '<span>⏳</span> Indexing...';
-          
+          originalBtn.innerHTML = '<span>⏳</span> Starting...';
+
           const response = await fetch(`${API_URL}/autorag/sync`, {
             method: 'POST',
             headers: {
@@ -750,38 +937,72 @@
           });
 
           if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorData || response.statusText}`);
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+
+            // Build detailed error message
+            let errorMsg = '❌ AutoRAG Indexing Failed\n\n';
+
+            // Check for specific error types
+            const errorDetails = typeof errorData.details === 'string'
+              ? errorData.details
+              : JSON.stringify(errorData.details);
+
+            if (errorDetails && errorDetails.includes('sync_in_cooldown')) {
+              errorMsg = '⏱️ AutoRAG Sync Cooldown Active\n\n';
+              errorMsg += 'Cloudflare AutoRAG limits how often you can trigger indexing.\n\n';
+              errorMsg += '💡 Please wait a few minutes before trying again.\n';
+              errorMsg += '   The cooldown is typically 1-5 minutes between sync operations.\n\n';
+              errorMsg += '   Your previous indexing job may still be processing.';
+            } else {
+              errorMsg += `Error: ${errorData.error || 'Unknown error'}\n`;
+
+              if (errorData.details) {
+                if (typeof errorData.details === 'string') {
+                  errorMsg += `Details: ${errorData.details}\n`;
+                } else if (Array.isArray(errorData.details)) {
+                  errorMsg += `Details:\n${errorData.details.map(d => `  • ${d.message || d}`).join('\n')}\n`;
+                }
+              }
+
+              errorMsg += '\n📋 Common issues:\n';
+              errorMsg += '  • Files larger than 4MB cannot be processed\n';
+              errorMsg += '  • Unsupported file formats\n';
+              errorMsg += '  • Empty or corrupted files\n';
+              errorMsg += '\n💡 Suggestion: Check file sizes and formats, then try re-indexing';
+            }
+
+            throw new Error(errorMsg);
           }
 
           const result = await response.json();
-          
-          // Show success message
-          originalBtn.innerHTML = '<span>✅</span> Indexed!';
-          originalBtn.style.background = '#22c55e';
-          
-          // Show job ID if available
+
+          // Start polling for job status if we have a job ID
           if (result.job_id) {
-            alert(`Indexing triggered successfully!\nJob ID: ${result.job_id}\n\nCheck progress in Cloudflare Dashboard → AutoRAG → Jobs`);
+            originalBtn.innerHTML = '<span>⏳</span> Indexing...';
+            pollJobStatus(result.job_id, originalBtn);
           } else {
-            alert('Indexing triggered successfully! Documents will be processed shortly.');
+            // Fallback if no job ID
+            originalBtn.innerHTML = '<span>✅</span> Triggered!';
+            originalBtn.style.background = '#22c55e';
+            alert('✅ Indexing triggered successfully!\n\nDocuments will be processed shortly.');
+
+            setTimeout(() => {
+              originalBtn.disabled = false;
+              originalBtn.innerHTML = '<span>🔍</span> Re-index';
+              originalBtn.style.background = '#10b981';
+            }, 3000);
           }
-          
-          // Reset button after 3 seconds
-          setTimeout(() => {
-            originalBtn.innerHTML = originalContent;
-            originalBtn.style.background = '#10b981';
-            originalBtn.disabled = false;
-          }, 3000);
-          
+
         } catch (error) {
           console.error('Error triggering indexing:', error);
-          alert(`Error triggering indexing: ${error.message}`);
-          
+          alert(error.message);
+
           // Reset button on error
-          if (event.target) {
-            event.target.disabled = false;
-            event.target.innerHTML = '<span>🔍</span> Re-index';
+          const btn = event.target;
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>🔍</span> Re-index';
+            btn.style.background = '#10b981';
           }
         }
       }

@@ -54,13 +54,14 @@ function getClientIdentifier(request: Request): string {
 export async function checkRateLimit(
   request: Request,
   env: Env,
-  config?: RateLimitConfig
+  config?: RateLimitConfig,
+  corsHeaders?: Record<string, string>
 ): Promise<Response | null> {
   // Rate limiting is opt-in for this framework
   if (env.ENABLE_RATE_LIMITING !== 'true') {
     return null; // Skip rate limiting by default
   }
-  
+
   // Use configured values or defaults
   const effectiveConfig = config || {
     windowMs: parseInt(env.RATE_LIMIT_WINDOW_MS || '60000'),
@@ -69,7 +70,7 @@ export async function checkRateLimit(
   };
   const clientId = getClientIdentifier(request);
   const now = Date.now();
-  
+
   // Clean up old entries (older than 5 minutes)
   const cleanupThreshold = now - 5 * 60 * 1000;
   for (const [key, value] of requestCounts.entries()) {
@@ -77,26 +78,26 @@ export async function checkRateLimit(
       requestCounts.delete(key);
     }
   }
-  
+
   // Get or create client record
   const clientRecord = requestCounts.get(clientId);
-  
+
   if (!clientRecord) {
     // First request from this client
     requestCounts.set(clientId, { count: 1, timestamp: now });
     return null;
   }
-  
+
   // Check if window has expired
   if (now - clientRecord.timestamp > effectiveConfig.windowMs) {
     // Reset the window
     requestCounts.set(clientId, { count: 1, timestamp: now });
     return null;
   }
-  
+
   // Increment request count
   clientRecord.count++;
-  
+
   // Check if limit exceeded
   if (clientRecord.count > effectiveConfig.maxRequests) {
     return new Response(
@@ -111,15 +112,16 @@ export async function checkRateLimit(
           'Retry-After': String(Math.ceil((clientRecord.timestamp + effectiveConfig.windowMs - now) / 1000)),
           'X-RateLimit-Limit': String(effectiveConfig.maxRequests),
           'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': String(new Date(clientRecord.timestamp + effectiveConfig.windowMs).toISOString())
+          'X-RateLimit-Reset': String(new Date(clientRecord.timestamp + effectiveConfig.windowMs).toISOString()),
+          ...(corsHeaders || {})
         }
       }
     );
   }
-  
+
   // Update the record
   requestCounts.set(clientId, clientRecord);
-  
+
   return null;
 }
 
@@ -130,27 +132,30 @@ export async function checkRateLimit(
 export async function checkRequestSize(
   request: Request,
   env: Env,
-  maxSizeBytes?: number
+  maxSizeBytes?: number,
+  corsHeaders?: Record<string, string>
 ): Promise<Response | null> {
   // Use configured value or default (request size check is always enabled for stability)
   const maxSize = maxSizeBytes || parseInt(env.MAX_REQUEST_SIZE_KB || '100') * 1024;
   const contentLength = request.headers.get('Content-Length');
-  
+
   if (contentLength && parseInt(contentLength) > maxSize) {
     return new Response(
       JSON.stringify({
         error: 'Request body too large',
-        maxSize: `${maxSize} bytes`
+        maxSize: `${Math.floor(maxSize / 1024 / 1024)}MB`,
+        actualSize: `${Math.floor(parseInt(contentLength) / 1024 / 1024)}MB`
       }),
       {
         status: 413,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(corsHeaders || {})
         }
       }
     );
   }
-  
+
   // For requests without Content-Length header, check the actual body size
   if (request.body) {
     try {
@@ -159,12 +164,13 @@ export async function checkRequestSize(
         return new Response(
           JSON.stringify({
             error: 'Request body too large',
-            maxSize: `${maxSize} bytes`
+            maxSize: `${Math.floor(maxSize / 1024 / 1024)}MB`
           }),
           {
             status: 413,
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              ...(corsHeaders || {})
             }
           }
         );
@@ -174,7 +180,7 @@ export async function checkRequestSize(
       // Continue processing if we can't determine size
     }
   }
-  
+
   return null;
 }
 
@@ -286,24 +292,31 @@ export function sanitizeRequestHeaders(headers: Headers): Headers {
  */
 export async function applySecurityChecks(
   request: Request,
-  env: Env
+  env: Env,
+  corsHeaders?: Record<string, string>
 ): Promise<Response | null> {
   // Rate limiting is optional (disabled by default for showcase)
   if (env.ENABLE_RATE_LIMITING === 'true' && !request.url.includes('/health')) {
-    const rateLimitResponse = await checkRateLimit(request, env);
+    const rateLimitResponse = await checkRateLimit(request, env, undefined, corsHeaders);
     if (rateLimitResponse) {
       return rateLimitResponse;
     }
   }
-  
-  // Request size check is always enabled for stability (prevents memory issues)
+
+  // Request size check with higher limit for file uploads
   if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
-    const sizeResponse = await checkRequestSize(request, env);
+    const url = new URL(request.url);
+    // Use larger limit for file uploads (100MB default), smaller for other requests (100KB default)
+    const maxSize = url.pathname === '/r2/upload'
+      ? parseInt(env.MAX_UPLOAD_SIZE_MB || '100') * 1024 * 1024
+      : parseInt(env.MAX_REQUEST_SIZE_KB || '100') * 1024;
+
+    const sizeResponse = await checkRequestSize(request, env, maxSize, corsHeaders);
     if (sizeResponse) {
       return sizeResponse;
     }
   }
-  
+
   return null;
 }
 

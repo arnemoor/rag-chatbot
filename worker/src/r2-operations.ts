@@ -33,32 +33,6 @@ export class R2Operations {
 
     const listed = await this.bucket.list(options);
 
-    // Extract folders from placeholder files
-    const placeholderFolders = new Set<string>();
-    listed.objects.forEach((obj) => {
-      if (obj.key.endsWith('.placeholder')) {
-        // Remove the .placeholder suffix to get the folder path
-        const folderPath = obj.key.replace('.placeholder', '');
-        // Only add if it's within the current prefix
-        if (folderPath.startsWith(prefix)) {
-          // Get the relative path from the prefix
-          const relativePath = folderPath.substring(prefix.length);
-          // Only add if it's a direct child (no additional slashes)
-          if (!relativePath.includes('/') || relativePath.indexOf('/') === relativePath.lastIndexOf('/')) {
-            placeholderFolders.add(folderPath);
-          }
-        }
-      }
-    });
-
-    // Combine R2's delimited prefixes with placeholder folders
-    const allPrefixes = [...(listed.delimitedPrefixes || [])];
-    placeholderFolders.forEach((folder) => {
-      if (!allPrefixes.includes(folder)) {
-        allPrefixes.push(folder);
-      }
-    });
-
     return {
       objects: listed.objects.map((obj) => ({
         key: obj.key,
@@ -70,7 +44,7 @@ export class R2Operations {
       })),
       truncated: listed.truncated,
       cursor: listed.truncated ? (listed as any).cursor : undefined,
-      delimitedPrefixes: allPrefixes.sort(),
+      delimitedPrefixes: listed.delimitedPrefixes || [],
     };
   }
 
@@ -181,16 +155,17 @@ export class R2Operations {
   }
 
   /**
-   * Create a folder (by creating a placeholder object)
+   * Create a folder (by creating a zero-byte object with trailing slash)
    */
   async createFolder(path: string): Promise<Response> {
+    // Ensure path ends with forward slash (S3 standard for folders)
     if (!path.endsWith('/')) {
       path += '/';
     }
 
     try {
-      // Create a zero-byte object to represent the folder
-      await this.bucket.put(`${path}.placeholder`, '', {
+      // Create a zero-byte object with trailing slash (S3 standard)
+      await this.bucket.put(path, '', {
         customMetadata: { type: 'folder' },
       });
 
