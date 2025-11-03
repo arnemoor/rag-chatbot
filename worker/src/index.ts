@@ -24,7 +24,7 @@ import {
   handleLegacyCategories,
 } from './routes/config';
 import { handleChat } from './routes/chat';
-import { handleAutoRAGSync } from './routes/autorag';
+import { handleAutoRAGSync, handleAutoRAGJobStatus, handleAutoRAGJobLogs } from './routes/autorag';
 
 // Utility imports
 import { handleUnknownRoute } from './utils/error-handler';
@@ -36,18 +36,18 @@ import { handleUnknownRoute } from './utils/error-handler';
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     try {
-      // Apply security checks first (rate limiting, request size, etc.)
-      const securityResponse = await applySecurityChecks(request, env);
+      // Build CORS headers first so they can be included in all responses (including errors)
+      const corsHeaders = buildCorsHeaders(request, env);
+
+      // Apply security checks (rate limiting, request size, etc.)
+      const securityResponse = await applySecurityChecks(request, env, corsHeaders);
       if (securityResponse) {
         return securityResponse;
       }
 
-      // Build CORS headers for all responses
-      const corsHeaders = buildCorsHeaders(request, env);
-      
       // Build security headers
       const securityHeaders = buildSecurityHeaders(env);
-      
+
       // Combine all headers
       const responseHeaders = {
         ...corsHeaders,
@@ -96,6 +96,21 @@ export default {
       // AutoRAG sync/indexing endpoint
       if (url.pathname === '/autorag/sync' && request.method === 'POST') {
         return handleAutoRAGSync(env, responseHeaders);
+      }
+
+      // AutoRAG job status endpoint
+      if (url.pathname.startsWith('/autorag/jobs/') && request.method === 'GET') {
+        const pathParts = url.pathname.split('/');
+        const jobId = pathParts[3]; // /autorag/jobs/{jobId} or /autorag/jobs/{jobId}/logs
+
+        if (jobId) {
+          // Check if requesting logs
+          if (pathParts[4] === 'logs') {
+            return handleAutoRAGJobLogs(jobId, env, responseHeaders);
+          }
+          // Otherwise return job status
+          return handleAutoRAGJobStatus(jobId, env, responseHeaders);
+        }
       }
 
       // Configuration endpoints

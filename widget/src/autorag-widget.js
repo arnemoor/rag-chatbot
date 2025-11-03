@@ -37,6 +37,7 @@ class AutoRAGWidget extends HTMLElement {
       theme: 'light',
       minimized: true,
       buttonText: 'Chat with Support',
+      enableSourceLinks: true, // Enable clickable source links by default
       headerTitle: 'Support Assistant',
       width: '400px',
       height: '600px',
@@ -88,7 +89,7 @@ class AutoRAGWidget extends HTMLElement {
     if (oldValue !== newValue) {
       const camelCase = name.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
       this.config[camelCase] = newValue;
-      
+
       // Re-render if already initialized
       if (this.shadowRoot.children.length > 0 && this.styleManager) {
         this.render();
@@ -139,7 +140,7 @@ class AutoRAGWidget extends HTMLElement {
     
     // Initialize API service
     this.apiService = new ApiService(this.config.apiUrl);
-    
+
     // Initialize message component
     this.messageComponent = new ChatMessage();
     
@@ -158,6 +159,11 @@ class AutoRAGWidget extends HTMLElement {
         this.config.minimized = isMinimized;
         this.render();
       }
+    });
+
+    this.stateManager.addObserver('isMaximized', (isMaximized) => {
+      // Re-render to apply maximized class
+      this.render();
     });
   }
 
@@ -215,7 +221,13 @@ class AutoRAGWidget extends HTMLElement {
     attributes.forEach((attr) => {
       const camelCase = attr.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
       if (Object.prototype.hasOwnProperty.call(this.config, camelCase)) {
-        this.config[camelCase] = this.getAttribute(attr);
+        let value = this.getAttribute(attr);
+
+        // Convert boolean string values
+        if (value === 'true') value = true;
+        if (value === 'false') value = false;
+
+        this.config[camelCase] = value;
       }
     });
 
@@ -291,12 +303,19 @@ class AutoRAGWidget extends HTMLElement {
   getExpandedHTML() {
     const translations = this.languageDetector ? this.languageDetector.getTranslations() : {};
     const headerTitle = this.config.headerTitle || translations.headerTitle || 'Support Assistant';
+    const isMaximized = this.stateManager ? this.stateManager.get('isMaximized') : false;
+    const maximizeIcon = isMaximized
+      ? '⊡' // Restore icon
+      : '□'; // Maximize icon
 
     return `
-      <div class="widget-chat">
+      <div class="widget-chat ${isMaximized ? 'maximized' : ''}">
         <div class="widget-header">
           <h3>${headerTitle}</h3>
-          <button class="widget-close" aria-label="${translations.closeButton || 'Close chat'}">×</button>
+          <div class="widget-header-actions">
+            <button class="widget-maximize" aria-label="${isMaximized ? 'Restore' : 'Maximize'}" title="${isMaximized ? 'Restore' : 'Maximize'}">${maximizeIcon}</button>
+            <button class="widget-close" aria-label="${translations.closeButton || 'Close chat'}">×</button>
+          </div>
         </div>
         <div class="widget-messages" id="messages"></div>
         <div class="widget-input-container" id="input-container"></div>
@@ -326,11 +345,16 @@ class AutoRAGWidget extends HTMLElement {
     this.clickHandler = (e) => {
       const widgetButton = e.target.closest('.widget-button');
       const widgetClose = e.target.closest('.widget-close');
+      const widgetMaximize = e.target.closest('.widget-maximize');
 
       if (widgetButton) {
         e.preventDefault();
         e.stopPropagation();
         this.expand();
+      } else if (widgetMaximize) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.toggleMaximize();
       } else if (widgetClose) {
         e.preventDefault();
         e.stopPropagation();
@@ -420,6 +444,16 @@ class AutoRAGWidget extends HTMLElement {
   }
 
   /**
+   * Toggle maximize/restore state
+   */
+  toggleMaximize() {
+    if (this.stateManager) {
+      const isMaximized = this.stateManager.get('isMaximized');
+      this.stateManager.set('isMaximized', !isMaximized);
+    }
+  }
+
+  /**
    * Send a message
    */
   async sendMessage(message) {
@@ -453,10 +487,29 @@ class AutoRAGWidget extends HTMLElement {
       });
 
       // Remove loading message
-      this.messageComponent.removeTypingIndicator(loadingId);
+      this.messageComponent.removeTypingIndicator(loadingId, messagesContainer);
+
+      // Format response with citations if enabled
+      let responseText = response.text;
+      if (this.config.enableSourceLinks && response.citations && response.citations.length > 0) {
+        // Strip LLM-generated source citations (e.g., "Source: file1.pdf, file2.pdf")
+        // This prevents duplicate citations
+        responseText = responseText.replace(/\n*Source[s]?:\s*[^\n]+(\n|$)/gi, '\n').trim();
+
+        // Add structured citations with download links
+        responseText += '\n\n**Sources:**\n';
+        response.citations.forEach((citation, index) => {
+          const fullPath = citation.filename;
+          // Extract just the filename (last part after /)
+          const displayName = fullPath.split('/').pop();
+          const encodedPath = encodeURIComponent(fullPath);
+          const downloadUrl = `${this.config.apiUrl}/r2/get/${encodedPath}`;
+          responseText += `${index + 1}. [${displayName}](${downloadUrl})\n`;
+        });
+      }
 
       // Add assistant response
-      this.addMessage('assistant', response.text);
+      this.addMessage('assistant', responseText);
 
       // Update session ID if provided
       if (response.sessionId) {
@@ -475,10 +528,10 @@ class AutoRAGWidget extends HTMLElement {
       );
     } catch (error) {
       console.error('AutoRAG Widget Error:', error);
-      
+
       // Remove loading message
-      this.messageComponent.removeTypingIndicator(loadingId);
-      
+      this.messageComponent.removeTypingIndicator(loadingId, messagesContainer);
+
       // Add error message
       const errorMessage = this.messageComponent.createErrorMessage(
         error.message,
